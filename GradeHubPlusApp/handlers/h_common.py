@@ -1,9 +1,40 @@
 import os
 import hashlib
 
+from streamlit import session_state
+from typing import Any
 from datetime import datetime
 from pytz import timezone
 from enum import Enum
+
+
+type FullName = list[str]
+type SignUpOutputMsg = dict[str, SignUpStates | str]
+type SignInOutputMsg = dict[str, SignInStates | Any]
+
+
+def logout():
+    session_state['Auth-Status'] = False
+    session_state['Fullname'] = None
+    session_state['Username'] = None
+    session_state['Role'] = None
+    session_state['Selector-Menu'] = ('Авторизация', 'Информация')
+
+
+class SignUpStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+
+
+class SignInStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+
+
+class ValidationStates(Enum):
+    VALID = 1
+    INVALID = 2
+    NULL = 3
 
 
 class Encryption:
