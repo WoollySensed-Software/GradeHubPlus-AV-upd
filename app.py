@@ -51,9 +51,12 @@ elif st.session_state['Auth-Status']:
     st.sidebar.write('---')
 
     if selector_mode == 'Главная':
-        # home_ui = HomeUI()
-        # home_ui.setupUI()
-        st.session_state
+        home_ui = HomeUI(
+            st.session_state['Username'], 
+            st.session_state['Fullname'], 
+            st.session_state['Role']
+        )
+        home_ui.setupUI()
     elif selector_mode == 'Профиль':
         # profile_ui = ProfileUI()
         # profile_ui.setupUI()
