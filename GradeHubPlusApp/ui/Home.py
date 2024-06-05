@@ -1,6 +1,7 @@
 import streamlit as st
 
 from pandas import DataFrame as df
+from streamlit_option_menu import option_menu
 from GradeHubPlusApp.handlers.h_common import (
     AddStundentStates, AddSubjectStates
 )
@@ -26,7 +27,33 @@ class HomeUI:
         elif self.s_role == 'User': self.__user_ui()
     
     def __admin_ui(self):
-        pass
+        options = ('Таблицы', 'Уведомления', 'Ключи')
+        selector_mode = option_menu(
+            menu_title=None, 
+            orientation='horizontal', 
+            options=options, 
+            styles=None
+        )
+
+        # --- выбор таблицы ---
+        if selector_mode == options[0]:
+            table = st.radio(
+                'Таблица', options=('users', 'scores', 'subjects', 'students'), 
+                horizontal=True
+            )
+
+            df_data = self.h_admin.display_selected_df(table) # type: ignore
+            dataframe = df(df_data)
+            dataframe.index += 1
+            st.dataframe(dataframe, use_container_width=True)
+
+        # --- работа с уведомлениями ---
+        elif selector_mode == options[1]:
+            ...
+
+        # --- работа с ключами ---
+        elif selector_mode == options[2]:
+            ...
 
     def __moder_ui(self):
         # --- фильры таблицы ---

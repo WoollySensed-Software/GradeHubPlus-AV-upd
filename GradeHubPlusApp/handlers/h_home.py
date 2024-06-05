@@ -6,7 +6,120 @@ from GradeHubPlusApp.handlers.h_common import (
 from GradeHubPlusApp.handlers.h_database import DatabaseH
 
 
-class AdminH: pass
+class AdminH(DatabaseH):
+
+    def __init__(self):
+        super().__init__()
+    
+    def display_selected_df(self, table: str) -> DataFrame:
+        dataframe = self.__correct_dataframe(table)
+
+        if table == 'users':
+            elements = self.__users_elements_from_db()
+
+            if elements is not None:
+                dataframe['Дата'] =     [i[0] for i in elements]
+                dataframe['Логин'] =    [i[1] for i in elements]
+                dataframe['Имя'] =      [i[2] for i in elements]
+                dataframe['Фамилия'] =  [i[3] for i in elements]
+                dataframe['Роль'] =     [i[4] for i in elements]
+        elif table == 'scores':
+            elements = self.__scores_elements_from_db()
+
+            if elements is not None:
+                dataframe['Дата'] =             [i[0] for i in elements]
+                dataframe['Студент'] =          [i[1] for i in elements]
+                dataframe['Предмет'] =          [i[2] for i in elements]
+                dataframe['Тип работы'] =       [i[3] for i in elements]
+                dataframe['Баллы'] =            [i[4] for i in elements]
+                dataframe['Преподаватель'] =    [i[5] for i in elements]
+        elif table == 'subjects':
+            elements = self.__subjects_elements_from_db()
+
+            if elements is not None:
+                dataframe['Предмет'] = [i for i in elements]
+        elif table == 'students':
+            elements = self.__students_elements_from_db()
+
+            if elements is not None:
+                dataframe['Дата'] =         [i[0] for i in elements]
+                dataframe['Имя Фамилия'] =  [i[1] for i in elements]
+                dataframe['Направление'] =  [i[2] for i in elements]
+                dataframe['Курс'] =         [i[3] for i in elements]
+        
+        return dataframe
+    
+    def __correct_dataframe(self, table: str) -> DataFrame:
+        if table == 'users':
+            dataframe = {
+                'Дата': [], 
+                'Логин': [], 
+                'Имя': [], 
+                'Фамилия': [], 
+                'Роль': []
+            }
+        elif table == 'scores':
+            dataframe = {
+                'Дата': [], 
+                'Студент': [], 
+                'Предмет': [], 
+                'Тип работы': [], 
+                'Баллы': [], 
+                'Преподаватель': []
+            }
+        elif table == 'subjects':
+            dataframe = {
+                'Предмет': []
+            }
+        elif table == 'students':
+            dataframe = {
+                'Дата': [], 
+                'Имя Фамилия': [], 
+                'Направление': [], 
+                'Курс': []
+            }
+        
+        return dataframe
+
+    def __users_elements_from_db(self) -> list | None:
+        data = self.db_users.fetch().items
+
+        if data != []:
+            res = []
+
+            for i in data:
+                res += [(
+                    i['date'], i['key'], i['firstName'], 
+                    i['lastName'], i['role']
+                )]
+            return res
+                
+        else: return
+
+    def __scores_elements_from_db(self) -> list | None:
+        data = self.db_scores.fetch().items
+
+        if data != []:
+            res = []
+
+            for i in data:
+                res += [(
+                    i['date'], i['student'], i['subject'], 
+                    i['workType'], i['score'], i['moder']
+                )]
+            return res
+        else: return
+
+    def __subjects_elements_from_db(self) -> list | None:
+        data = self.db_subjects.fetch().items
+        return [i['key'] for i in data] if data != [] else None
+
+    def __students_elements_from_db(self) -> list | None:
+        data = self.db_students.fetch().items
+
+        if data != []:
+            return [(i['date'], i['key'], i['direction'], i['course']) for i in data]
+        else: return
 
 
 class ModeratorH(DatabaseH):
@@ -35,16 +148,6 @@ class ModeratorH(DatabaseH):
         data = self.db_subjects.fetch()
 
         return [i['key'] for i in data.items] if data.items != [] else []
-
-    # def get_all_moderators(self) -> list[tuple[str, list[str]]]:
-    #     data = self.db_users.fetch()
-
-    #     if data.items != []:
-    #         return [
-    #             (i['key'], [i['firstName'], i['lastName']]) 
-    #             for i in data.items if i['role'] == 'Moderator'
-    #         ]
-    #     else: return []
     
     def add_student(self, 
         full_name: FullName, 
@@ -336,4 +439,3 @@ class UserH(DatabaseH):
                             break
         
         return res
-
