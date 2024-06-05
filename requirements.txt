@@ -1,0 +1,7 @@
+deta==1.2.0
+email_validate==1.1.2
+pandas==2.2.2
+pytz==2023.3.post1
+streamlit==1.35.0
+streamlit_extras==0.4.3
+streamlit_option_menu==0.3.13

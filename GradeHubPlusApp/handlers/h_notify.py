@@ -77,27 +77,41 @@ class EmailNotificationH(DatabaseH):
         
         return output_msg
 
-
     def send_score_notify(self, 
         moder_username: str, 
+        moder_full_name: str, 
         subject: str, 
+        work_type: str, 
         score: int, 
-        users: list
+        students: list
     ):
-        # TODO: сделать нужную валидацию | добавить возможность узнать 
-        # сколько у пользователя баллов на данный момент по предмету
+        
+        for student in students:
+            full_name, _dir, course = student.split(' - ')
+            notidy_data = self.db_notify.fetch({'isEnable': 'Yes'}).items
 
-        msg = (
-            f'Здравствуйте, [Full Name].\n\n' + 
-            f'[Moderator] выставил Вам баллы: [Score]\n' + 
-            f'по предмету: [Subject].\n' + 
-            f'На данный момент по этому предмету у Вас [All Score] балл(ов).\n\n\n\n' + 
-            'Вы сможете узнать баллы по остальным предметам на главной странице, ' + 
-            'после авторизации на сайте:\nhttps://gradehu6plus-av.streamlit.app'
-        )
-        # FIXME: указать почту пользователя вместо 'Email'
-        self.__send_email('Email', 'Уведомление от GradeHub+', msg)
-
+            if notidy_data != []:
+                for i in notidy_data:
+                    if i['fullName'] == full_name:
+                        data = self.db_scores.fetch({
+                            'moder': moder_username, 
+                            'student': student
+                        }).items[0]
+                        msg = (
+                            f'Здравствуйте, {full_name}.\n\n' + 
+                            f'{moder_full_name} выставил Вам {score} балла(ов)\n' + 
+                            f'по предмету: {subject}, за {work_type.lower()}.\n' + 
+                            f'На данный момент по этому предмету у Вас ' + 
+                            f'{data['score']} балл(ов).\n\n\n\n' + 
+                            'Вы сможете узнать баллы по остальным ' + 
+                            'предметам на главной странице, ' + 
+                            'после авторизации на сайте:\n' + 
+                            'https://gradehu6plus-av.streamlit.app'
+                        )
+                        self.__send_notify(
+                            i['link'], 'Уведомление от GradeHub+', msg
+                        )
+    # FIXME: не работает
     def __send_email(self, to_email: str, subject: str, body: str):
         msg = MIMEText(body)
         msg['Subject'] = subject
@@ -110,6 +124,34 @@ class EmailNotificationH(DatabaseH):
                 server.sendmail(NOTIFY_EMAIL, to_email, msg.as_string())
         except smtplib.SMTPException as err:
             print('Не удалось отправить письмо!')
+
+    # отправка работает
+    def __send_notify(self, to_email: str, subject: str, message: str):
+        # Кодировка письма
+        charset = 'Content-Type: text/plain; charset=utf-8'
+        mime = 'MIME-Version: 1.0'
+
+        # Формирование тела письма
+        body = '\r\n'.join((
+            f'From: {NOTIFY_EMAIL}',
+            f'To: {to_email}',
+            f'Subject: {subject}',
+            mime, charset, '', message
+        ))
+
+        try:
+            # Подключение к почтовому сервису
+            smtp = smtplib.SMTP(NOTIFY_SERVER, NOTIFY_PORT)
+            smtp.starttls()
+            smtp.ehlo()
+            # Вход в почтовый сервер
+            smtp.login(NOTIFY_EMAIL, NOTIFY_PW)
+            # Отправка письма
+            smtp.sendmail(NOTIFY_EMAIL, to_email, body.encode('utf-8'))
+        except smtplib.SMTPException as error:
+            print('Не удалось отправить письмо...')
+            raise error
+        finally: smtp.quit()
 
 # возможность отправки уведомлений через телеграм-бота будет позже...
 class TelegramNotificationH(DatabaseH): pass

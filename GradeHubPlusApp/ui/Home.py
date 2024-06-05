@@ -7,6 +7,7 @@ from GradeHubPlusApp.handlers.h_common import (
     AddSecretKeyStates, DelSecretKeyStates
 )
 from GradeHubPlusApp.handlers.h_home import AdminH, ModeratorH, UserH
+from GradeHubPlusApp.handlers.h_notify import EmailNotificationH
 
 
 class HomeUI:
@@ -18,6 +19,7 @@ class HomeUI:
         self.h_admin = AdminH()
         self.h_moder = ModeratorH()
         self.h_user = UserH()
+        self.h_email_notify = EmailNotificationH()
 
     def setupUI(self):
         st.markdown(f'### Добро пожаловать, :red[{self.s_full_name}]!')
@@ -87,7 +89,6 @@ class HomeUI:
                         elif output_msg['state'] == DelSecretKeyStates.FAIL:
                             st.warning(output_msg['msg'], icon='⚠️')
                     else: st.warning('Необходимо ввести ключ', icon='⚠️')
-
 
     def __moder_ui(self):
         # --- фильры таблицы ---
@@ -234,6 +235,10 @@ class HomeUI:
                         )
 
                         # TODO: добавить отправку уведомлений...
+                        self.h_email_notify.send_score_notify(
+                            self.s_username, self.s_full_name, es_subject,  # type: ignore
+                            es_wtype, es_score, es_students # type: ignore
+                        )
                         st.toast('Изменения внесены в БД', icon='🔥')
                     else: st.warning('Укажите хотя бы одного студента', icon='⚠️')
 
