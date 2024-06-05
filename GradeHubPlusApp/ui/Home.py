@@ -191,7 +191,29 @@ class HomeUI:
 
     def __user_ui(self):
         # --- фильры таблицы ---
-        ...
+        with st.sidebar:
+            st.markdown('Фильтры сортировки таблицы:')
+            selector_moders = st.multiselect(
+                'Преподаватели', options=[
+                    f'{i[1][0]} {i[1][1]}' for i in self.h_user.get_all_moderators()
+                ], 
+                placeholder='Можно несколько'
+            )
+            selector_subjects = st.multiselect(
+                'Предметы', options=self.h_moder.get_all_subjects(), 
+                placeholder='Можно несколько'
+            )
+            selector_wtypes = st.multiselect(
+                'Типы работы', 
+                options=('Лекция', 'Семинар', 'Лабораторная', 'Практика'), 
+                placeholder='Можно несколько'
+            )
 
         # --- отображение таблицы ---
-        ...
+        df_data = self.h_user.display_df(
+            self.s_full_name, selector_moders, 
+            selector_subjects, selector_wtypes
+        )
+        dataframe = df(df_data)
+        dataframe.index += 1
+        st.dataframe(dataframe, use_container_width=True)

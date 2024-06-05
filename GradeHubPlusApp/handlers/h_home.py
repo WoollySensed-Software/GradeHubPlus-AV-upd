@@ -36,15 +36,15 @@ class ModeratorH(DatabaseH):
 
         return [i['key'] for i in data.items] if data.items != [] else []
 
-    def get_all_moderators(self) -> list[tuple[str, list[str]]]:
-        data = self.db_users.fetch()
+    # def get_all_moderators(self) -> list[tuple[str, list[str]]]:
+    #     data = self.db_users.fetch()
 
-        if data.items != []:
-            return [
-                (i['key'], [i['firstName'], i['lastName']]) 
-                for i in data.items if i['role'] == 'Moderator'
-            ]
-        else: return []
+    #     if data.items != []:
+    #         return [
+    #             (i['key'], [i['firstName'], i['lastName']]) 
+    #             for i in data.items if i['role'] == 'Moderator'
+    #         ]
+    #     else: return []
     
     def add_student(self, 
         full_name: FullName, 
@@ -238,4 +238,102 @@ class ModeratorH(DatabaseH):
         return res
 
 
-class UserH: pass
+class UserH(DatabaseH):
+
+    def __init__(self):
+        super().__init__()
+
+    def get_all_subjects(self) -> list[str]:
+        data = self.db_subjects.fetch()
+
+        return [i['key'] for i in data.items] if data.items != [] else []
+    
+    def get_all_moderators(self) -> list[tuple[str, list[str]]]:
+        data = self.db_users.fetch({'role': 'Moderator'}).items
+
+        if data != []:
+            return [(i['key'], [i['firstName'], i['lastName']]) for i in data]
+        else: return []
+    
+    def display_df(self, 
+        student: str, 
+        moders: list, 
+        subjects: list, 
+        work_types: list
+    ) -> DataFrame:
+        # FIXME: очень странная реализация фильтрации по модеру
+        # нужно оптимизировать данный участок
+        if moders == []:
+            moders = self.get_all_moderators()
+        else:
+            moders_data = self.db_users.fetch({'role': 'Moderator'})
+            moders_full_name = moders
+            res = []
+            for i in moders_data.items:
+                for j in moders_full_name:
+                    fname, lname = j.split(' ')
+                    if i['firstName'] == fname and i['lastName'] == lname:
+                        res += [(i['key'], [fname, lname])]
+            moders = res
+        if subjects == []: subjects = self.get_all_subjects()
+        if work_types == []: work_types = [
+            'Лекция', 'Семинар', 'Лабораторная', 'Практика'
+        ]
+        
+        dataframe = {
+            'Предмет': [], 
+            'Тип работы': [], 
+            'Баллы': [], 
+            'Преподаватель': []
+        }
+        students_data = self.db_students.get(student)
+
+        if students_data is not None:
+            student = (
+                f'{students_data['key']} - ' +  # type: ignore
+                f'{students_data['direction']} - ' + # type: ignore
+                f'{students_data['course']}' # type: ignore
+            )
+            data = self.db_scores.fetch({'student': student})
+
+            if data.items != []:
+                elements = self.__df_elements(
+                    data.items, moders, subjects, work_types
+                )
+                # заполнение отфильтрованной таблицы
+                dataframe['Предмет'] =          [i[0] for i in elements]
+                dataframe['Тип работы'] =       [i[1] for i in elements]
+                dataframe['Баллы'] =            [i[2] for i in elements]
+                dataframe['Преподаватель'] =    [i[3] for i in elements]
+
+                return dataframe
+            else: return dataframe
+        else: return dataframe
+
+    def __df_elements(self, 
+        data: list, 
+        moders: list, 
+        subjects: list, 
+        work_types: list
+    ) -> list:
+        res = []
+
+        while data != []:
+            i = data.pop()
+
+            for subject in subjects:
+                for moder in moders:
+                    for wtype in work_types:
+                        if (
+                            i['moder'] == moder[0] and 
+                            i['subject'] == subject and 
+                            i['workType'] == wtype
+                        ):
+                            res += [(
+                                subject, wtype, i['score'], 
+                                f'{moder[1][0]} {moder[1][1]}'
+                            )]
+                            break
+        
+        return res
+
