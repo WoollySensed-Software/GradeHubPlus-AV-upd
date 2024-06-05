@@ -24,7 +24,7 @@ if 'Selector-Menu' not in st.session_state:
 # --- параметры страницы ---
 st.set_page_config(
     page_title='GradeHub+', 
-    page_icon=None, 
+    page_icon='./GradeHubPlusApp/resources/media/ghp_icon.png', 
     layout='wide'
 )
 
