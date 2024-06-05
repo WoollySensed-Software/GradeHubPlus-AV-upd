@@ -3,7 +3,8 @@ import streamlit as st
 from pandas import DataFrame as df
 from streamlit_option_menu import option_menu
 from GradeHubPlusApp.handlers.h_common import (
-    AddStundentStates, AddSubjectStates
+    AddStundentStates, AddSubjectStates, 
+    AddSecretKeyStates, DelSecretKeyStates
 )
 from GradeHubPlusApp.handlers.h_home import AdminH, ModeratorH, UserH
 
@@ -14,7 +15,6 @@ class HomeUI:
         self.s_username = username
         self.s_full_name = full_name
         self.s_role = role
-
         self.h_admin = AdminH()
         self.h_moder = ModeratorH()
         self.h_user = UserH()
@@ -53,7 +53,41 @@ class HomeUI:
 
         # --- работа с ключами ---
         elif selector_mode == options[2]:
-            ...
+            # --- таблица с ключами ---
+            df_data = self.h_admin.display_keys_df()
+            dataframe = df(df_data)
+            dataframe.index += 1
+            st.dataframe(dataframe, use_container_width=True)
+
+            with st.form('Form_KeysHandler', clear_on_submit=True, border=True):
+                st.markdown(':red[Работа с ключами]')
+                st.markdown('Кол-во свободных ключей: ' + 
+                    f'{self.h_admin.get_free_keys_count()} шт.'
+                )
+
+                kh_mode = st.radio(
+                    'Режим работы', options=('Добавить', 'Удалить'), 
+                    horizontal=True, label_visibility='collapsed'
+                )
+                kh_key = st.text_input('Ключ', max_chars=16, type='password')
+
+                if st.form_submit_button('Выполнить', type='primary'):
+                    if kh_mode == 'Добавить' and kh_key != '':
+                        output_msg = self.h_admin.add_auth_key(kh_key)
+
+                        if output_msg['state'] == AddSecretKeyStates.SUCCESS:
+                            st.success(output_msg['msg'], icon='✔️')
+                        elif output_msg['state'] == AddSecretKeyStates.FAIL:
+                            st.warning(output_msg['msg'], icon='⚠️')
+                    elif kh_mode == 'Удалить' and kh_key != '':
+                        output_msg = self.h_admin.del_auth_key(kh_key)
+
+                        if output_msg['state'] == DelSecretKeyStates.SUCCESS:
+                            st.success(output_msg['msg'], icon='✔️')
+                        elif output_msg['state'] == DelSecretKeyStates.FAIL:
+                            st.warning(output_msg['msg'], icon='⚠️')
+                    else: st.warning('Необходимо ввести ключ', icon='⚠️')
+
 
     def __moder_ui(self):
         # --- фильры таблицы ---

@@ -5,6 +5,7 @@ from GradeHubPlusApp.config.settings import SIDEBAR_INFO
 from GradeHubPlusApp.handlers.h_common import logout
 from GradeHubPlusApp.ui.Authorization import AuthorizationAUI
 from GradeHubPlusApp.ui.Home import HomeUI
+from GradeHubPlusApp.ui.Profile import ProfileUI
 
 # --- состояние сессии
 if 'Auth-Status' not in st.session_state:
@@ -58,9 +59,12 @@ elif st.session_state['Auth-Status']:
         )
         home_ui.setupUI()
     elif selector_mode == 'Профиль':
-        # profile_ui = ProfileUI()
-        # profile_ui.setupUI()
-        ...
+        profile_ui = ProfileUI(
+            st.session_state['Username'], 
+            st.session_state['Fullname'], 
+            st.session_state['Role']
+        )
+        profile_ui.setupUI()
     elif selector_mode == 'Информация':
         # about_ui = AboutUI()
         # about_ui.setupUI()

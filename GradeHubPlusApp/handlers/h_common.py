@@ -8,11 +8,15 @@ from pytz import timezone
 from enum import Enum
 
 
-type FullName = list[str]
 type SignUpOutputMsg = dict[str, SignUpStates | str]
 type SignInOutputMsg = dict[str, SignInStates | Any]
 type AddStudentOutputMsg = dict[str, AddStundentStates | str]
 type AddSubjectOutputMsg = dict[str, AddSubjectStates | str]
+type AddSecretKeyOutputMsg = dict[str, AddSecretKeyStates | str]
+type DelSecretKeyOutputMsg = dict[str, DelSecretKeyStates | str]
+type AddEmailOutputMsg = dict[str, AddEmailStates | str]
+type ChangeEmailOutputMsg = dict[str, ChangeEmailStates | str]
+type FullName = list[str]
 type ScoreModes = Literal['Добавить', 'Вычесть']
 type WorkTypes = Literal['Лекция', 'Семинар', 'Лабораторная', 'Практика']
 type DataFrame = dict[str, list[Any]]
@@ -40,6 +44,18 @@ class AddStundentStates(Enum):
     SUCCESS = 1
     FAIL = 2
 class AddSubjectStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+class AddSecretKeyStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+class DelSecretKeyStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+class AddEmailStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+class ChangeEmailStates(Enum):
     SUCCESS = 1
     FAIL = 2
 

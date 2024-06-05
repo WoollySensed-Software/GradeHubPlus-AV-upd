@@ -65,6 +65,13 @@ class AuthorizationH(DatabaseH):
                 'role': 'Moderator'
             })
             self.db_keys.update({'owner': username}, hash_key)
+            self.db_notify.put({
+                'key': username, 
+                'fullName': f'{full_name[0]} {full_name[1]}', 
+                'mode': 'Undefined', 
+                'link': 'Undefined', 
+                'isEnable': 'No'
+            })
             
             return {
                 'state': SignUpStates.SUCCESS, 
@@ -114,6 +121,13 @@ class AuthorizationH(DatabaseH):
             'lastName': full_name[1], 
             'password': password, 
             'role': 'User'
+        })
+        self.db_notify.put({
+            'key': username, 
+            'fullName': f'{full_name[0]} {full_name[1]}', 
+            'mode': 'Undefined', 
+            'link': 'Undefined', 
+            'isEnable': 'No'
         })
         
         return {

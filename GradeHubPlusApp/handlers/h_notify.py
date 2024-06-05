@@ -6,12 +6,27 @@ from GradeHubPlusApp.config.settings import (
     NOTIFY_EMAIL, NOTIFY_PW, NOTIFY_SERVER, NOTIFY_PORT
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
+from GradeHubPlusApp.handlers.h_common import (
+    AddEmailOutputMsg, ChangeEmailOutputMsg, 
+    AddEmailStates, ChangeEmailStates
+)
 
 
-class EmailNotification(DatabaseH):
+class EmailNotificationH(DatabaseH):
 
     def __init__(self):
         super().__init__()
+    
+    def get_notify_status(self, username: str) -> str:
+        return self.db_notify.fetch({'key': username}).items[0]['isEnable']
+
+    def change_notify_status(self, username: str) -> None:
+        notify_status = self.get_notify_status(username)
+        value = 'Yes' if notify_status == 'No' else 'No'
+        self.db_notify.update({'isEnable': value}, username)
+
+    def get_notify_mode(self, username: str) -> str:
+        return self.db_notify.fetch({'key': username}).items[0]['mode']
 
     def validate_email(self, email: str):
         return validate(
@@ -24,9 +39,44 @@ class EmailNotification(DatabaseH):
             smtp_debug=False
         )
     
-    def get_email(self): pass  # получить данные из БД
-    def new_email(self): pass  # первое добавление почты в БД
-    def change_email(self): pass  # изменение почты в БД
+    def get_link(self, username: str) -> str:
+        return self.db_notify.fetch({'key': username}).items[0]['link']
+
+    def add_email(self, username: str, link: str) -> AddEmailOutputMsg:
+        if self.get_notify_status(username) == 'No':
+            self.db_notify.update({
+                'mode': 'Email', 
+                'link': link
+            }, username)
+            output_msg = {
+                'state': AddEmailStates.SUCCESS, 
+                'msg': 'Данный метод успешно добавлен в БД.'
+            }
+        else: output_msg = {
+            'state': AddEmailStates.FAIL, 
+            'msg': 'Не удалось добавить почту в БД.'
+        }
+        
+        return output_msg
+
+    def change_email(self, 
+        username: str, 
+        old_link: str, 
+        new_link: str
+    ) -> ChangeEmailOutputMsg:
+        if self.get_link(username) == old_link:
+            self.db_notify.update({'link': new_link}, username)
+            output_msg = {
+                'state': ChangeEmailStates.SUCCESS, 
+                'msg': 'Почта успешно изменена.'
+            }
+        else: output_msg = {
+            'state': ChangeEmailStates.FAIL, 
+            'msg': 'Не удалось изменить почту.'
+        }
+        
+        return output_msg
+
 
     def send_score_notify(self, 
         moder_username: str, 
@@ -62,4 +112,4 @@ class EmailNotification(DatabaseH):
             print('Не удалось отправить письмо!')
 
 # возможность отправки уведомлений через телеграм-бота будет позже...
-class TelegramNotification(DatabaseH): pass
+class TelegramNotificationH(DatabaseH): pass

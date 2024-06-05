@@ -1,7 +1,9 @@
 from GradeHubPlusApp.handlers.h_common import (
     AddStudentOutputMsg, AddSubjectOutputMsg, 
+    AddSecretKeyOutputMsg, DelSecretKeyOutputMsg, 
     ScoreModes, WorkTypes, DataFrame, FullName, 
-    AddStundentStates, AddSubjectStates, DtTools
+    AddStundentStates, AddSubjectStates, AddSecretKeyStates, 
+    DelSecretKeyStates, DtTools, Encryption
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
 
@@ -120,6 +122,104 @@ class AdminH(DatabaseH):
         if data != []:
             return [(i['date'], i['key'], i['direction'], i['course']) for i in data]
         else: return
+
+    def get_free_keys_count(self) -> int:
+        return self.db_keys.fetch({'owner': 'Undefined'}).count
+
+    def add_auth_key(self, key: str) -> AddSecretKeyOutputMsg:
+        data = self.db_keys.fetch().items
+        hash_key = Encryption.hash_pw(key)
+        _dt = DtTools.dt_now()
+        date = f'{_dt:%d-%m-%Y}|{_dt:%H:%M:%S}'
+
+        if data != []:
+            for i in data:
+                valid = Encryption.check_pw(i['key'], key)
+
+                if valid:
+                    output_msg = {
+                        'state': AddSecretKeyStates.FAIL, 
+                        'msg': 'Такой ключ уже есть в БД.'
+                    }
+                    break
+                else:
+                    self.db_keys.put({
+                        'key': hash_key, 
+                        'date': date, 
+                        'owner': 'Undefined'
+                    })
+                    output_msg = {
+                        'state': AddSecretKeyStates.SUCCESS, 
+                        'msg': 'Ключ успешно добавлен в БД.'
+                    }
+                    continue
+        else:
+            self.db_keys.put({
+                'key': hash_key, 
+                'date': date, 
+                'owner': 'Undefined'
+            })
+            output_msg = {
+                'state': AddSecretKeyStates.SUCCESS, 
+                'msg': 'Ключ успешно добавлен в БД.'
+            }
+
+        return output_msg
+
+    def del_auth_key(self, key: str) -> DelSecretKeyOutputMsg:
+        data = self.db_keys.fetch().items
+
+        if data != []:
+            for i in data:
+                valid = Encryption.check_pw(i['key'], key)
+
+                if valid and i['owner'] == 'Undefined':
+                    self.db_keys.delete(i['key'])
+                    output_msg = {
+                        'state': DelSecretKeyStates.SUCCESS, 
+                        'msg': 'Ключ успешно удален из БД.'
+                    }
+                    break
+                elif valid and i['owner'] != 'Undefined':
+                    output_msg = {
+                        'state': DelSecretKeyStates.FAIL, 
+                        'msg': f'Этот ключ занят модератором {i['owner']}.'
+                    }
+                    break
+                else:
+                    output_msg = {
+                        'state': DelSecretKeyStates.FAIL, 
+                        'msg': 'Ключ не был распознан.'
+                    }
+                    continue
+        else: output_msg = {
+            'state': DelSecretKeyStates.FAIL, 
+            'msg': 'Такого ключа нет в БД.'
+        }
+        
+        return output_msg
+
+    def display_keys_df(self) -> DataFrame:
+        dataframe = {
+            'Ключ': [], 
+            'Дата': [], 
+            'Преподаватель': []
+        }
+
+        data = self.db_keys.fetch().items
+
+        if data != []:
+            elements = self.__keys_elements_from_db(data)
+
+            dataframe['Ключ'] =             [i[0] for i in elements]
+            dataframe['Дата'] =             [i[1] for i in elements]
+            dataframe['Преподаватель'] =    [i[2] for i in elements]
+
+            return dataframe
+        else: return dataframe
+
+    def __keys_elements_from_db(self, data: list) -> list:
+        return [('SECRET_KEY', i['date'], i['owner']) for i in data]
 
 
 class ModeratorH(DatabaseH):
