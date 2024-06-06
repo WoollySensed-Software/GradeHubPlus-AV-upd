@@ -32,6 +32,7 @@ class HomeUI:
         options = ('Таблицы', 'Уведомления', 'Ключи')
         selector_mode = option_menu(
             menu_title=None, 
+            icons=['table', 'bell-fill', 'key-fill'], 
             orientation='horizontal', 
             options=options, 
             styles=None
@@ -147,7 +148,7 @@ class HomeUI:
             self.__form_zeroing_scores()
 
     def __form_add_student(self):
-        with st.form('From_AddStudent', clear_on_submit=True, border=True):
+        with st.form('From_AddStudent', clear_on_submit=True, border=False):
             col_as_fname, col_as_lname, col_as_course = st.columns(3)
             as_first_name = col_as_fname.text_input(
                 'Имя студента', max_chars=64, 
@@ -207,7 +208,7 @@ class HomeUI:
                 )
 
     def __form_add_subject(self):
-        with st.form('Form_AddSubject', clear_on_submit=True, border=True):
+        with st.form('Form_AddSubject', clear_on_submit=True, border=False):
             asu_subject = st.text_input(
                 'Предмет (без кода)', max_chars=256, 
                 placeholder='Введите название предмета'
@@ -224,7 +225,7 @@ class HomeUI:
                 else: st.warning('Вы не указать название предмета!', icon='⚠️')
 
     def __form_edit_scores(self):
-        with st.form('Form_EditScores', clear_on_submit=True, border=True):
+        with st.form('Form_EditScores', clear_on_submit=True, border=False):
             es_subject = st.selectbox(
                 'Выберите предмет', options=self.h_moder.get_all_subjects()
             )
@@ -260,7 +261,7 @@ class HomeUI:
                 else: st.warning('Укажите хотя бы одного студента', icon='⚠️')
 
     def __form_zeroing_scores(self):
-        with st.form('Form_ZeroingScores', border=True):
+        with st.form('Form_ZeroingScores', border=False):
             zs_subject = st.selectbox(
                 'Выберите предмет для обнуления', 
                 options=self.h_moder.get_all_subjects()

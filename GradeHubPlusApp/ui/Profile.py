@@ -21,6 +21,7 @@ class ProfileUI:
         options = ('Аккаунт', 'Настройки')
         selector_mode = option_menu(
             menu_title=None, 
+            icons=['person-lines-fill', 'gear-fill'], 
             orientation='horizontal', 
             options=options, 
             styles=None
@@ -120,7 +121,7 @@ class ProfileUI:
             self.__form_change_password()
 
     def __form_add_notify_mode(self):
-        with st.form('Form_AddNotifyMode', clear_on_submit=True, border=True):
+        with st.form('Form_AddNotifyMode', clear_on_submit=True, border=False):
             anm_selected_mode = st.selectbox(
                 'Выберите систему для отправки оповещений', 
                 options=('Почта', 'Телеграм')
@@ -154,7 +155,7 @@ class ProfileUI:
                 )
 
     def __form_change_email_link(self):
-        with st.form('Form_ChangeEmailLink', clear_on_submit=True, border=True):
+        with st.form('Form_ChangeEmailLink', clear_on_submit=True, border=False):
             cel_old_link = st.text_input(
                 'Введите старую почту', max_chars=128, 
                 placeholder='Можно найти в разделе "Аккаунт"'
@@ -189,7 +190,7 @@ class ProfileUI:
                 )
 
     def __form_change_password(self):
-        with st.form('Form_ChangePassword', clear_on_submit=True, border=True):
+        with st.form('Form_ChangePassword', clear_on_submit=True, border=False):
             cp_old_pw = st.text_input(
                 'Введите старый пароль', max_chars=32, type='password', 
                 placeholder='Не должен совпадать с новым паролем'

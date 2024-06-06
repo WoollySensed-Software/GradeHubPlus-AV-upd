@@ -15,6 +15,7 @@ class AuthorizationAUI:
         options = ('Регистрация', 'Вход')
         selector_mode = option_menu(
             menu_title=None, 
+            icons=['person-plus-fill', 'box-arrow-in-right'], 
             default_index=1, 
             orientation='horizontal', 
             options=options
@@ -23,7 +24,7 @@ class AuthorizationAUI:
         self.__sign_up() if selector_mode == options[0] else self.__sign_in()
 
     def __sign_up(self):
-        with st.form('Form_SignUp', border=True):
+        with st.form('Form_SignUp', border=False):
             st.markdown(':red[Регистрация]')
             col_su_fname, col_su_lname = st.columns(2)
             su_first_name = col_su_fname.text_input(
@@ -84,7 +85,7 @@ class AuthorizationAUI:
                 )
 
     def __sign_in(self):
-        with st.form('Form_SignIn', border=True):
+        with st.form('Form_SignIn', border=False):
             st.markdown(':red[Вход в аккаунт]')
             si_username = st.text_input(
                 'Логин', max_chars=32, placeholder='Введите логин'
@@ -114,3 +115,19 @@ class AuthorizationAUI:
                 else: st.warning(
                     'Необходимо ввести как логин, так и пароль.', icon='⚠️'
                 )
+        
+        # ЭКСПЕРИМЕНТАЛЬНО: восстановление пароля
+        # with st.popover('не помню пароль', use_container_width=True):
+        #     self.__form_forget_password()
+
+    def __form_forget_password(self):
+        with st.form('Form_ForgetPassword', clear_on_submit=True, border=False):
+            fp_email = st.text_input(
+                'Введите почту', max_chars=128, 
+                placeholder='Вам придет новый пароль'
+            )
+
+            if st.form_submit_button('Восстановить', type='primary'):
+                if fp_email != '':
+                    st.write('Вот новый пароль')
+                else: st.warning('Нужно указать свою почту', icon='⚠️')
