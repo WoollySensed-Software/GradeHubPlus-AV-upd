@@ -1,5 +1,6 @@
 from GradeHubPlusApp.handlers.h_common import (
-    ChangeEmailOutputMsg, ChangeEmailStates, Encryption
+    ChangePasswordOutputMsg, 
+    ChangePasswordStates, Encryption
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
 
@@ -16,7 +17,7 @@ class ProfileH(DatabaseH):
         username: str, 
         old_pw: str, 
         new_pw: str
-    ) -> ChangeEmailOutputMsg:
+    ) -> ChangePasswordOutputMsg:
         hash_pw = self.db_users.fetch({'key': username}).items[0]['password']
         password = Encryption.hash_pw(new_pw)
         if Encryption.check_pw(hash_pw, old_pw):
@@ -24,12 +25,12 @@ class ProfileH(DatabaseH):
                 'password': password
             }, username)
             output_msg = {
-                'state': ChangeEmailStates.SUCCESS, 
+                'state': ChangePasswordStates.SUCCESS, 
                 'msg': 'Пароль успешно изменен.'
             }
         else:
             output_msg = {
-                'state': ChangeEmailStates.FAIL, 
+                'state': ChangePasswordStates.FAIL, 
                 'msg': 'Вы ввели неверный старый пароль.'
             }
         
