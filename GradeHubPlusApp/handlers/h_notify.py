@@ -124,7 +124,6 @@ class EmailNotificationH(DatabaseH):
                 server.sendmail(NOTIFY_EMAIL, to_email, msg.as_string())
         except smtplib.SMTPException as err:
             print('Не удалось отправить письмо!')
-
     # отправка работает
     def __send_notify(self, to_email: str, subject: str, message: str):
         # Кодировка письма

@@ -16,6 +16,7 @@ type AddSecretKeyOutputMsg = dict[str, AddSecretKeyStates | str]
 type DelSecretKeyOutputMsg = dict[str, DelSecretKeyStates | str]
 type AddEmailOutputMsg = dict[str, AddEmailStates | str]
 type ChangeEmailOutputMsg = dict[str, ChangeEmailStates | str]
+type ChangePasswordOutputMsg = dict[str, ChangePasswordStates | str]
 type FullName = list[str]
 type ScoreModes = Literal['Добавить', 'Вычесть']
 type WorkTypes = Literal['Лекция', 'Семинар', 'Лабораторная', 'Практика']
@@ -56,6 +57,9 @@ class AddEmailStates(Enum):
     SUCCESS = 1
     FAIL = 2
 class ChangeEmailStates(Enum):
+    SUCCESS = 1
+    FAIL = 2
+class ChangePasswordStates(Enum):
     SUCCESS = 1
     FAIL = 2
 

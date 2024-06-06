@@ -1,7 +1,9 @@
 import streamlit as st
 
 from streamlit_option_menu import option_menu
-from GradeHubPlusApp.handlers.h_common import AddEmailStates, ChangeEmailStates
+from GradeHubPlusApp.handlers.h_common import (
+    AddEmailStates, ChangeEmailStates, ChangePasswordStates
+)
 from GradeHubPlusApp.handlers.h_notify import EmailNotificationH
 from GradeHubPlusApp.handlers.h_profile import ProfileH
 
@@ -83,12 +85,13 @@ class ProfileUI:
         }
 
     def __settings(self):
+        # --- управление почтой ---
         with st.expander(':red[Управление почтой]'):
             notify_mode = self.h_email_notify.get_notify_mode(self.s_username)
 
             # --- добавление ---
             if notify_mode == 'Undefined':
-                self.__from_add_notify_mode()
+                self.__form_add_notify_mode()
             else:
                 # --- уведомления ---
                 notify = self.h_email_notify.get_notify_status(self.s_username)
@@ -111,8 +114,12 @@ class ProfileUI:
                 # --- изменение ---
                 if notify_mode == 'Email':
                     self.__form_change_email_link()
+        
+        # --- изменение пароля ---
+        with st.expander(':red[Изменение пароля]'):
+            self.__form_change_password()
 
-    def __from_add_notify_mode(self):
+    def __form_add_notify_mode(self):
         with st.form('Form_AddNotifyMode', clear_on_submit=True, border=True):
             anm_selected_mode = st.selectbox(
                 'Выберите систему для отправки оповещений', 
@@ -163,7 +170,10 @@ class ProfileUI:
 
             if st.form_submit_button('Изменить', type='primary'):
                 if cel_old_link != '' and cel_new_link != '':
-                    if cel_new_link == cel_confirm_link:
+                    if (
+                        cel_new_link == cel_confirm_link and 
+                        cel_new_link != cel_old_link
+                    ):
                         if self.h_email_notify.validate_email(cel_new_link):
                             output_msg = self.h_email_notify.change_email(
                                 self.s_username, cel_old_link, cel_new_link
@@ -177,3 +187,37 @@ class ProfileUI:
                 else: st.warning(
                     'Необходимо заполнить все поля.', icon='⚠️'
                 )
+
+    def __form_change_password(self):
+        with st.form('Form_ChangePassword', clear_on_submit=True, border=True):
+            cp_old_pw = st.text_input(
+                'Введите старый пароль', max_chars=32, type='password', 
+                placeholder='Не должен совпадать с новым паролем'
+            )
+
+            col_new_pw, col_confirm_pw = st.columns(2)
+            cp_new_pw = col_new_pw.text_input(
+                'Введите новый пароль', max_chars=32, type='password', 
+                placeholder='Не используйте простой пароль'
+            )
+            cp_confirm_pw = col_confirm_pw.text_input(
+                'Подтвердите новый пароль', max_chars=32, type='password', 
+                placeholder='Должен совпадать с новым паролем'
+            )
+
+            if st.form_submit_button('Изменить', type='primary'):
+                if cp_old_pw != '' and cp_new_pw != '':
+                    if (
+                        cp_new_pw == cp_confirm_pw and 
+                        cp_new_pw != cp_old_pw
+                    ):
+                        output_msg = self.h_profile.change_password(
+                            self.s_username, cp_old_pw, cp_new_pw
+                        )
+
+                        if output_msg['state'] == ChangePasswordStates.SUCCESS:
+                            st.success(output_msg['msg'], icon='✔️')
+                        elif output_msg['state'] == ChangePasswordStates.FAIL:
+                            st.warning(output_msg['msg'], icon='⚠️')
+                    else: st.warning('Пароли не совпадают.', icon='⚠️')
+                else: st.warning('Необходимо заполнить все поля.', icon='⚠️')
