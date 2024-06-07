@@ -7,6 +7,11 @@ from GradeHubPlusApp.handlers.h_database import DatabaseH
 
 
 class AuthorizationH(DatabaseH):
+    """
+    Класс для авторизации пользователей.
+    
+    Наследуется от класса `DatabaseH`.
+    """
     
     def __init__(self):
         super().__init__()
@@ -19,6 +24,20 @@ class AuthorizationH(DatabaseH):
         *, 
         moder_key: str = ''
     ) -> SignUpOutputMsg:
+        """
+        Обрабатывает данные пользователя при создании аккаунта.
+        
+        Параметры:
+        - full_name: FullName, принимает имя и фамилию пользователя;
+        - username: str, принимает логин пользователя;
+        - password: str, принимает пароль пользователя;
+        - moderator: bool, принимает статус пользователя;
+        - moder_key: str = '', принимает ключ авторизации для модератора.
+        
+        Возвращает:
+        - словарь типа `SignUpOutputMsg`.
+        """
+        
         valid_account = self.__create_account_validation(username)
         if not valid_account:
             return {
@@ -139,6 +158,17 @@ class AuthorizationH(DatabaseH):
         username: str, 
         password: str
     ) -> SignInOutputMsg:
+        """
+        Обрабатывает данные пользователя при входе.
+
+        Параметры:
+        - username: str, принимает логин пользователя;
+        - password: str, принимает пароль пользователя.
+
+        Возвращает:
+        - словарь типа `SignInOutputMsg`.
+        """
+        
         data = self.db_users.fetch()
 
         if data.items != []:

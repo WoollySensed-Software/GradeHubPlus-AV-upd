@@ -108,6 +108,9 @@ class AuthorizationAUI:
                         st.session_state['Selector-Menu'] = (
                             'Главная', 'Профиль', 'Информация'
                         )
+                        st.session_state['Selector-Icons'] = (
+                            'house', 'person-lines-fill', 'info-circle-fill'
+                        )
 
                         st.success(res['msg'], icon='✔️')
                     elif res['state'] == SignInStates.FAIL:

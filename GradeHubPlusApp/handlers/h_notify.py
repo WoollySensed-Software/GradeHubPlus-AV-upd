@@ -13,22 +13,71 @@ from GradeHubPlusApp.handlers.h_common import (
 
 
 class EmailNotificationH(DatabaseH):
+    """
+    Класс управляющий системой отправки уведомлений.
+
+    Наследуется от класса `DatabaseH`.
+    """
 
     def __init__(self):
         super().__init__()
     
     def get_notify_status(self, username: str) -> str:
+        """
+        Обрабатывает статус отправки уведомлений для пользователя.
+
+        Параметры:
+        - username: str, принимает логин пользователя.
+
+        Возвращает:
+        - 'Yes';
+        - 'No'.
+        """
+
         return self.db_notify.fetch({'key': username}).items[0]['isEnable']
 
     def change_notify_status(self, username: str) -> None:
+        """
+        Меняет статут отправки уведомлений у пользователя.
+
+        Параметры:
+        - username: str, принимает логин пользователя.
+
+        Ничего не возвращает.
+        """
+
         notify_status = self.get_notify_status(username)
         value = 'Yes' if notify_status == 'No' else 'No'
         self.db_notify.update({'isEnable': value}, username)
 
     def get_notify_mode(self, username: str) -> str:
+        """
+        Получает способ отправки уведомлений для пользователя.
+
+        Параметры:
+        - username: str, принимает логин пользователя.
+
+        Возвращает:
+        - 'Email', если у пользователя указана почта;
+        - 'Telegram', если у пользователя указан Телеграм;
+        - 'Undefined', если у пользователя ничего не указано.
+        """
+
         return self.db_notify.fetch({'key': username}).items[0]['mode']
 
-    def validate_email(self, email: str):
+    def validate_email(self, email: str) -> bool | None:
+        """
+        Обрабатывает вводимую почту на валидность.
+
+        Параметры:
+        - email: str, принимает почту для проверки.
+
+        Возвращает:
+        - True, если почта прошла проверку;
+        - False, если почта не прошла проверку;
+        - None, if the result is ambigious.
+        """
+
         return validate(
             email_address=email, 
             check_format=True, 
@@ -40,9 +89,32 @@ class EmailNotificationH(DatabaseH):
         )
     
     def get_link(self, username: str) -> str:
+        """
+        Получает линк (example@gmail.com | @Username) для 
+        отправки уведомлений пользователю.
+
+        Параметры:
+        - username: str, принимает логин пользователя.
+
+        Возвращает:
+        - 'example@gmail.com', если указана почта;
+        - '@Username', если указан Телеграм.
+        """
+
         return self.db_notify.fetch({'key': username}).items[0]['link']
 
     def add_email(self, username: str, link: str) -> AddEmailOutputMsg:
+        """
+        Добавляет новую почту для отправки уведомлений.
+
+        Параметры:
+        - username: str, принимает логин пользователя;
+        - link: str, принимает линк (example@gmail.com) пользователя.
+
+        Возвращает:
+        - словарь типа `AddEmailOutputMsg`.
+        """
+
         if self.get_notify_status(username) == 'No':
             self.db_notify.update({
                 'mode': 'Email', 
@@ -64,6 +136,18 @@ class EmailNotificationH(DatabaseH):
         old_link: str, 
         new_link: str
     ) -> ChangeEmailOutputMsg:
+        """
+        Меняет старую почту пользователя на новую.
+
+        Параметры:
+        - username: str, принимает логин пользователя;
+        - old_link: str, принимает стурую почту;
+        - new_link: str, принимает новую почту.
+
+        Возвращает:
+        - словарь типа `ChangeEmailOutputMsg`.
+        """
+
         if self.get_link(username) == old_link:
             self.db_notify.update({'link': new_link}, username)
             output_msg = {
@@ -84,7 +168,23 @@ class EmailNotificationH(DatabaseH):
         work_type: str, 
         score: int, 
         students: list
-    ):
+    ) -> None:
+        """
+        Отправляет уведомление пользователю о кол-ве баллов по шаблону.
+
+        Параметры:
+        - moder_username: str, принимает логин модератора, 
+        который внес изменения;
+        - moder_full_name: str, принимает имя и фамилию модератора, 
+        который внес изменения;
+        - subject: str, принимает название предмета;
+        - work_type: str, принимает тип работы;
+        - score: int, принимает кол-во добавленных/вычтенных баллов;
+        - students: list, принимает список из студентов, которым 
+        были добавлены/вычтенны баллы.
+
+        Ничего не возвращает.
+        """
         
         for student in students:
             full_name, _dir, course = student.split(' - ')

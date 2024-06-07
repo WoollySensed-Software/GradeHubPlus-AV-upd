@@ -20,6 +20,10 @@ if 'Selector-Menu' not in st.session_state:
     st.session_state['Selector-Menu'] = (
         'Авторизация', 'Информация'
     )
+if 'Selector-Icons' not in st.session_state:
+    st.session_state['Selector-Icons'] = (
+        'person-fill-lock', 'info-circle-fill'
+    )
 
 # --- параметры страницы ---
 st.set_page_config(
@@ -34,7 +38,9 @@ with st.sidebar:
     st.markdown(SIDEBAR_INFO)
     st.write('---')
     selector_mode = option_menu(
-        menu_title=None, 
+        menu_title='Страницы:',
+        menu_icon='list-nested',  
+        icons=st.session_state['Selector-Icons'], 
         options=st.session_state['Selector-Menu'], 
         styles=None
     )

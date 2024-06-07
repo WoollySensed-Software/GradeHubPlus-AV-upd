@@ -9,11 +9,27 @@ from GradeHubPlusApp.handlers.h_database import DatabaseH
 
 
 class AdminH(DatabaseH):
+    """
+    Класс обработчик для администратора.
+
+    Наследуется от класса `DatabaseH`.
+    """
 
     def __init__(self):
         super().__init__()
     
     def display_selected_df(self, table: str) -> DataFrame:
+        """
+        Генерирует словарь для использования его в качестве датафрейма.
+        
+        Параметры:
+        - table: str, принимает одну из таблиц БД.
+
+        Возвращает:
+        - сгенерированный `DataFrame`, если в БД есть данные;
+        - пустой `DataFrame`, если в БД нет данных.
+        """
+
         dataframe = self.__correct_dataframe(table)
 
         if table == 'users':
@@ -124,9 +140,23 @@ class AdminH(DatabaseH):
         else: return
 
     def get_free_keys_count(self) -> int:
+        """
+        Возвращает кол-во незанятых ключей из БД.
+        """
+
         return self.db_keys.fetch({'owner': 'Undefined'}).count
 
     def add_auth_key(self, key: str) -> AddSecretKeyOutputMsg:
+        """
+        Обрабатывает валидность ключа и добавляет его БД.
+
+        Параметры:
+        - key: str, принимает ключ для модераторов.
+
+        Возвращает:
+        - словарь типа `AddSecretKeyOutputMsg`.
+        """
+
         data = self.db_keys.fetch().items
         hash_key = Encryption.hash_pw(key)
         _dt = DtTools.dt_now()
@@ -167,6 +197,16 @@ class AdminH(DatabaseH):
         return output_msg
 
     def del_auth_key(self, key: str) -> DelSecretKeyOutputMsg:
+        """
+        Проверяет валидность ключа и удаляет его из БД.
+
+        Параметры:
+        - key: str, принимает ключ для модератора.
+
+        Возвращает:
+        - словарь типа `DelSecretKeyOutputMsg`.
+        """
+
         data = self.db_keys.fetch().items
 
         if data != []:
@@ -200,6 +240,14 @@ class AdminH(DatabaseH):
         return output_msg
 
     def display_keys_df(self) -> DataFrame:
+        """
+        Генерирует словарь для использования его в качестве датафрейма.
+
+        Возвращает:
+        - сгенерированный `DataFrame`, если в БД есть данные;
+        - пустой `DataFrame`, если в БД нет данных.
+        """
+
         dataframe = {
             'Ключ': [], 
             'Дата': [], 
@@ -223,11 +271,20 @@ class AdminH(DatabaseH):
 
 
 class ModeratorH(DatabaseH):
+    """
+    Класс обработчик для модератора.
+
+    Наследуется от класса `DatabaseH`.
+    """
 
     def __init__(self):
         super().__init__()
 
     def get_all_directions(self) -> list[str]:
+        """
+        Возвращает список всех направлений из БД.
+        """
+
         data = self.db_students.fetch()
 
         if data.items != []:
@@ -235,6 +292,11 @@ class ModeratorH(DatabaseH):
         else: return ['Список направлений пуст']
     
     def get_all_students(self) -> list[str]:
+        """
+        Возвращает список всех студентов из БД в формате: 
+        Имя Фамилия - Направление - Курс.
+        """
+
         data = self.db_students.fetch()
 
         if data.items != []:
@@ -245,6 +307,10 @@ class ModeratorH(DatabaseH):
         else: return []
     
     def get_all_subjects(self) -> list[str]:
+        """
+        Возвращает список всех предметов из БД.
+        """
+
         data = self.db_subjects.fetch()
 
         return [i['key'] for i in data.items] if data.items != [] else []
@@ -254,6 +320,18 @@ class ModeratorH(DatabaseH):
         direction: str, 
         course: int
     ) -> AddStudentOutputMsg:
+        """
+        Добавляет нового студента в БД.
+
+        Параметры:
+        - full_name: FullName, принимает имя и фамилию студента;
+        - direction: str, принимает направление студента;
+        - course: int, принимает курс студента.
+
+        Возвращает:
+        - словарь типа `AddStudentOutputMsg`.
+        """
+        
         data = self.db_students.fetch({
             'key': f'{full_name[0]} {full_name[1]}', 
             'direction': direction, 
@@ -282,6 +360,16 @@ class ModeratorH(DatabaseH):
         return output_msg
     
     def add_subject(self, subject: str) -> AddSubjectOutputMsg:
+        """
+        Добавляет новый предмет в БД.
+
+        Параметры:
+        - subject: str, принимает название предмета.
+
+        Возвращает:
+        - словарь типа `AddSubjectOutputMsg`.
+        """
+
         data = self.db_subjects.fetch({'key': subject})
 
         if data.items == []:
@@ -305,6 +393,21 @@ class ModeratorH(DatabaseH):
         work_type: WorkTypes, 
         score: int
     ) -> None:
+        """
+        Обрабатывает вводимые данные для изменения 
+        баллов у студента(ов).
+
+        Параметры:
+        - moder: str, принимает логин модератора;
+        - students: list, принимает список студентов (минимум один);
+        - subject: str, принимает название предмета;
+        - mode: ScoreModes, принимает добавление или вычитание баллов;
+        - work_type: WorkTypes, принимает тип работы;
+        - score: int, принимает кол-во баллов.
+
+        Ничего не возвращает.
+        """
+        
         score = score if mode == 'Добавить' else -score
         data = self.db_scores.fetch({'moder': moder})
 
@@ -360,6 +463,17 @@ class ModeratorH(DatabaseH):
         })
 
     def zeroing_scores(self, moder: str, subject: str) -> None:
+        """
+        Обнуляет все баллы у всех студентов, закрепленных за 
+        модератором, по конкретному предмету.
+
+        Параметры:
+        - moder: str, принимает логин модератора;
+        - subject: str, принимает название предмета.
+
+        Ничего не возвращает.
+        """
+
         data = self.db_scores.fetch({'moder': moder})
 
         if data.items != []:
@@ -375,6 +489,24 @@ class ModeratorH(DatabaseH):
         subjects: list, 
         work_types: list
     ) -> DataFrame:
+        """
+        Генерирует словарь для использования его в качестве датафрейма, 
+        используя фильтры.
+
+        Параметры:
+        - moder: str, принимает логин модератора;
+        - students: list, принимает список выбранных студентов;
+        - directions: list, принимает список выбранных направлений;
+        - courses: list, принимает список выбранных курсов;
+        - subjects: list, принимает список выбранных предметов;
+        - work_types: list, принимает список выбранных типов работ.
+
+        Возвращает:
+        - сгенерированный `DataFrame`, если в БД есть данные, 
+        с учетом фильтров;
+        - пустой `DataFrame`, если в БД нет данных.
+        """
+        
         # проверка на пустые фильтры
         if students == []: students = self.get_all_students()
         if subjects == []: subjects = self.get_all_subjects()
@@ -442,16 +574,31 @@ class ModeratorH(DatabaseH):
 
 
 class UserH(DatabaseH):
+    """
+    Класс обработчик для пользователя.
+
+    Наследуется от класса `DatabaseH`.
+    """
 
     def __init__(self):
         super().__init__()
 
     def get_all_subjects(self) -> list[str]:
+        """
+        Возвращает список всех предметов из БД.
+        """
+
         data = self.db_subjects.fetch()
 
         return [i['key'] for i in data.items] if data.items != [] else []
     
     def get_all_moderators(self) -> list[tuple[str, list[str]]]:
+        """
+        Возвращает список, состоящий из кортежей, в которых 
+        указано: логин модератора и список из 
+        его имени и фамилии, из БД.
+        """
+        
         data = self.db_users.fetch({'role': 'Moderator'}).items
 
         if data != []:
@@ -464,6 +611,22 @@ class UserH(DatabaseH):
         subjects: list, 
         work_types: list
     ) -> DataFrame:
+        """
+        Генерирует словарь для использования его в качестве датафрейма, 
+        используя фильтры.
+
+        Параметры:
+        - student: str, принимает имя и фамилию студента;
+        - moders: list, принимает список из модераторов (имя и фамилия);
+        - subjects: list, принимает список названий предметов;
+        - work_types: list, принимает список типов работ.
+
+        Возвращает:
+        - сгенерированный `DataFrame`, если в БД есть данные, 
+        с учетом фильтров;
+        - пустой `DataFrame`, если в БД нет данных.
+        """
+
         # FIXME: очень странная реализация фильтрации по модеру
         # нужно оптимизировать данный участок
         if moders == []:

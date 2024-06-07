@@ -3,6 +3,9 @@ from GradeHubPlusApp.config.settings import KEY_DETA
 
 
 class DatabaseH:
+    """
+    Класс для работы с базой данных.
+    """
 
     def __init__(self):
         self.db = Deta(KEY_DETA)
