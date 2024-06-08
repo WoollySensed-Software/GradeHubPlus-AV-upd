@@ -124,4 +124,3 @@ class DtTools:
         """
 
         return datetime.now(timezone('Europe/Moscow'))
-

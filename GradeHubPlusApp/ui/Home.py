@@ -104,11 +104,11 @@ class HomeUI:
                 placeholder='Можно несколько'
             )
             selector_directions = st.multiselect(
-                'Направления (скоро)', options=self.h_moder.get_all_directions(), 
+                'Направления', options=self.h_moder.get_all_directions(), 
                 placeholder='Можно несколько'
             )
             selector_courses = st.multiselect(
-                'Курсы (скоро)', options=(1, 2, 3, 4, 5), 
+                'Курсы', options=(1, 2, 3, 4, 5), 
                 placeholder='Можно несколько'
             )
             selector_subjects = st.multiselect(

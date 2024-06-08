@@ -506,15 +506,15 @@ class ModeratorH(DatabaseH):
         с учетом фильтров;
         - пустой `DataFrame`, если в БД нет данных.
         """
-        
+
         # проверка на пустые фильтры
-        if students == []: students = self.get_all_students()
-        if subjects == []: subjects = self.get_all_subjects()
-        # if directions == []: directions = self.get_all_directions()
-        if work_types == []: work_types = [
+        if not students: students = self.get_all_students()
+        if not subjects: subjects = self.get_all_subjects()
+        if not directions: directions = self.get_all_directions()
+        if not work_types: work_types = [
             'Лекция', 'Семинар', 'Лабораторная', 'Практика'
         ]
-        # if courses == []: courses = [*range(1, 6)]
+        if not courses: courses = [1, 2, 3, 4, 5]
 
         dataframe = {
             'Студент': [], 
@@ -528,7 +528,8 @@ class ModeratorH(DatabaseH):
 
         if data.items != []:
             elements = self.__df_elements(
-                data.items, students, subjects, work_types
+                data.items, students, directions, 
+                courses, subjects, work_types
             )
             # заполнение отфильрованной таблицы
             dataframe['Студент'] =      [i[0] for i in elements]
@@ -540,36 +541,45 @@ class ModeratorH(DatabaseH):
             
             return dataframe
         else: return dataframe
-    
-    # FIXME: не работает фильтрация по направлению и курсу
+
     def __df_elements(self, 
         data: list, 
         students: list, 
-        # directions: list, 
-        # courses: list, 
+        directions: list, 
+        courses: list, 
         subjects: list, 
         work_types: list
-    ) -> list:
+    ):
         res = []
 
-        while data != []:
-            i = data.pop()
+        # Создаем словарь студентов для быстрого доступа
+        student_info = {}
+        for student in students:
+            parts = student.split(' - ')
+            if len(parts) == 3:
+                full_name, direction, course = parts
+                student_info[student] = (full_name, direction, int(course))
 
-            for subject in subjects:
-                for student in students:
-                    for wtype in work_types:
-                        if (
-                            i['subject'] == subject and 
-                            i['student'] == student and 
-                            i['workType'] == wtype
-                        ):
-                            full_name, _dir, _course = student.split(' - ')
-                            res += [(
-                                full_name, _dir, _course, 
-                                subject, wtype, i['score']
-                            )]
-                            break
-        
+        # Создаем множество допустимых комбинаций для быстрого поиска
+        valid_combinations = set()
+        for student in students:
+            if student in student_info:
+                full_name, direction, course = student_info[student]
+                if direction in directions and course in courses:
+                    for subject in subjects:
+                        for wtype in work_types:
+                            valid_combinations.add((subject, student, wtype))
+
+        # Проверяем каждый элемент данных
+        for i in data:
+            student = i['student']
+            subject = i['subject']
+            wtype = i['workType']
+            
+            if (subject, student, wtype) in valid_combinations:
+                full_name, direction, course = student_info[student]
+                res.append((full_name, direction, course, subject, wtype, i['score']))
+
         return res
 
 
