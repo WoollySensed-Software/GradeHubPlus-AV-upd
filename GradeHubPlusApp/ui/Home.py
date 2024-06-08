@@ -64,7 +64,7 @@ class HomeUI:
 
             # --- работа с ключами ---
             self.__form_keys_handler()
-
+    
     def __form_keys_handler(self):
         with st.form('Form_KeysHandler', clear_on_submit=True, border=True):
             st.markdown(':red[Работа с ключами]')
@@ -252,7 +252,6 @@ class HomeUI:
                         es_mode, es_wtype, es_score # type: ignore
                     )
 
-                    # TODO: добавить отправку уведомлений...
                     self.h_email_notify.send_score_notify(
                         self.s_username, self.s_full_name, es_subject,  # type: ignore
                         es_wtype, es_score, es_students # type: ignore

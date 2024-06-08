@@ -57,9 +57,9 @@ class AuthorizationH(DatabaseH):
         return output_msg
     
     def __create_account_validation(self, username: str) -> bool:
-        data = self.db_users.fetch()
+        data = self.db_users.fetch().items
 
-        if data.items != []:
+        if data:
             return True if self.db_users.get(username) is None else False
         else: return True
 
@@ -108,10 +108,10 @@ class AuthorizationH(DatabaseH):
             }
 
     def __validation_moder_key(self, key: str) -> tuple[str, ValidationStates]:
-        keys = self.db_keys.fetch()
+        keys = self.db_keys.fetch().items
 
-        if keys.items != []:
-            for i in keys.items:
+        if keys:
+            for i in keys:
                 valid = Encryption.check_pw(i['key'], key)
 
                 if valid and i['owner'] == 'Undefined':
@@ -169,10 +169,10 @@ class AuthorizationH(DatabaseH):
         - словарь типа `SignInOutputMsg`.
         """
         
-        data = self.db_users.fetch()
+        data = self.db_users.fetch().items
 
-        if data.items != []:
-            for i in data.items:
+        if data:
+            for i in data:
                 valid = Encryption.check_pw(i['password'], password)
 
                 if valid and i['key'] == username:

@@ -102,7 +102,7 @@ class AdminH(DatabaseH):
     def __users_elements_from_db(self) -> list | None:
         data = self.db_users.fetch().items
 
-        if data != []:
+        if data:
             res = []
 
             for i in data:
@@ -117,7 +117,7 @@ class AdminH(DatabaseH):
     def __scores_elements_from_db(self) -> list | None:
         data = self.db_scores.fetch().items
 
-        if data != []:
+        if data:
             res = []
 
             for i in data:
@@ -130,12 +130,12 @@ class AdminH(DatabaseH):
 
     def __subjects_elements_from_db(self) -> list | None:
         data = self.db_subjects.fetch().items
-        return [i['key'] for i in data] if data != [] else None
+        return [i['key'] for i in data] if data else None
 
     def __students_elements_from_db(self) -> list | None:
         data = self.db_students.fetch().items
 
-        if data != []:
+        if data:
             return [(i['date'], i['key'], i['direction'], i['course']) for i in data]
         else: return
 
@@ -162,7 +162,7 @@ class AdminH(DatabaseH):
         _dt = DtTools.dt_now()
         date = f'{_dt:%d-%m-%Y}|{_dt:%H:%M:%S}'
 
-        if data != []:
+        if data:
             for i in data:
                 valid = Encryption.check_pw(i['key'], key)
 
@@ -209,7 +209,7 @@ class AdminH(DatabaseH):
 
         data = self.db_keys.fetch().items
 
-        if data != []:
+        if data:
             for i in data:
                 valid = Encryption.check_pw(i['key'], key)
 
@@ -256,7 +256,7 @@ class AdminH(DatabaseH):
 
         data = self.db_keys.fetch().items
 
-        if data != []:
+        if data:
             elements = self.__keys_elements_from_db(data)
 
             dataframe['Ключ'] =             [i[0] for i in elements]
@@ -285,10 +285,10 @@ class ModeratorH(DatabaseH):
         Возвращает список всех направлений из БД.
         """
 
-        data = self.db_students.fetch()
+        data = self.db_students.fetch().items
 
-        if data.items != []:
-            return list(set([i['direction'] for i in data.items]))
+        if data:
+            return list(set([i['direction'] for i in data]))
         else: return ['Список направлений пуст']
     
     def get_all_students(self) -> list[str]:
@@ -297,12 +297,12 @@ class ModeratorH(DatabaseH):
         Имя Фамилия - Направление - Курс.
         """
 
-        data = self.db_students.fetch()
+        data = self.db_students.fetch().items
 
-        if data.items != []:
+        if data:
             return [
                 f'{i['key']} - {i['direction']} - {i['course']}' 
-                for i in data.items
+                for i in data
             ]
         else: return []
     
@@ -311,9 +311,9 @@ class ModeratorH(DatabaseH):
         Возвращает список всех предметов из БД.
         """
 
-        data = self.db_subjects.fetch()
+        data = self.db_subjects.fetch().items
 
-        return [i['key'] for i in data.items] if data.items != [] else []
+        return [i['key'] for i in data] if data else []
     
     def add_student(self, 
         full_name: FullName, 
@@ -336,9 +336,9 @@ class ModeratorH(DatabaseH):
             'key': f'{full_name[0]} {full_name[1]}', 
             'direction': direction, 
             'course': course
-        })
+        }).items
 
-        if data.items == []:
+        if not data:
             _dt = DtTools.dt_now()
             date = f'{_dt:%d-%m-%Y}|{_dt:%H:%M:%S}'
 
@@ -370,9 +370,9 @@ class ModeratorH(DatabaseH):
         - словарь типа `AddSubjectOutputMsg`.
         """
 
-        data = self.db_subjects.fetch({'key': subject})
+        data = self.db_subjects.fetch({'key': subject}).items
 
-        if data.items == []:
+        if not data:
             self.db_subjects.put({'key': subject})
             output_msg = {
                 'state': AddSubjectStates.SUCCESS, 
@@ -409,13 +409,13 @@ class ModeratorH(DatabaseH):
         """
         
         score = score if mode == 'Добавить' else -score
-        data = self.db_scores.fetch({'moder': moder})
+        data = self.db_scores.fetch({'moder': moder}).items
 
-        if data.items != []:
+        if data:
             for student in students:
                 updated = False
 
-                for i in data.items:
+                for i in data:
                     if (
                         i['student'] == student and 
                         i['subject'] == subject and 
@@ -474,10 +474,10 @@ class ModeratorH(DatabaseH):
         Ничего не возвращает.
         """
 
-        data = self.db_scores.fetch({'moder': moder})
+        data = self.db_scores.fetch({'moder': moder}).items
 
-        if data.items != []:
-            for i in data.items:
+        if data:
+            for i in data:
                 if i['subject'] == subject:
                     self.__update_scores(0, i['key'])
 
@@ -524,11 +524,11 @@ class ModeratorH(DatabaseH):
             'Тип работы': [], 
             'Баллы': []
         }
-        data = self.db_scores.fetch({'moder': moder})
+        data = self.db_scores.fetch({'moder': moder}).items
 
-        if data.items != []:
+        if data:
             elements = self.__df_elements(
-                data.items, students, directions, 
+                data, students, directions, 
                 courses, subjects, work_types
             )
             # заполнение отфильрованной таблицы
@@ -598,9 +598,9 @@ class UserH(DatabaseH):
         Возвращает список всех предметов из БД.
         """
 
-        data = self.db_subjects.fetch()
+        data = self.db_subjects.fetch().items
 
-        return [i['key'] for i in data.items] if data.items != [] else []
+        return [i['key'] for i in data] if data else []
     
     def get_all_moderators(self) -> list[tuple[str, list[str]]]:
         """
@@ -611,10 +611,10 @@ class UserH(DatabaseH):
         
         data = self.db_users.fetch({'role': 'Moderator'}).items
 
-        if data != []:
+        if data:
             return [(i['key'], [i['firstName'], i['lastName']]) for i in data]
         else: return []
-    
+
     def display_df(self, 
         student: str, 
         moders: list, 
@@ -632,60 +632,59 @@ class UserH(DatabaseH):
         - work_types: list, принимает список типов работ.
 
         Возвращает:
-        - сгенерированный `DataFrame`, если в БД есть данные, 
+        - сгенерированный DataFrame, если в БД есть данные, 
         с учетом фильтров;
-        - пустой `DataFrame`, если в БД нет данных.
+        - пустой DataFrame, если в БД нет данных.
         """
 
-        # FIXME: очень странная реализация фильтрации по модеру
-        # нужно оптимизировать данный участок
-        if moders == []:
+        # Если список модераторов пуст, получаем всех модераторов
+        if not moders:
             moders = self.get_all_moderators()
         else:
-            moders_data = self.db_users.fetch({'role': 'Moderator'})
-            moders_full_name = moders
-            res = []
-            for i in moders_data.items:
-                for j in moders_full_name:
-                    fname, lname = j.split(' ')
-                    if i['firstName'] == fname and i['lastName'] == lname:
-                        res += [(i['key'], [fname, lname])]
-            moders = res
-        if subjects == []: subjects = self.get_all_subjects()
-        if work_types == []: work_types = [
+            moders_data = self.db_users.fetch({'role': 'Moderator'}).items
+            moders_dict = {
+                f'{mod['firstName']} {mod['lastName']}': mod['key'] 
+                for mod in moders_data
+            }
+            moders = [
+                (moders_dict[moder], moder.split()) 
+                for moder in moders if moder in moders_dict
+            ]
+
+        # Если список предметов или типов работ пуст, заполняем их значениями по умолчанию
+        if not subjects: subjects = self.get_all_subjects()
+        if not work_types: work_types = [
             'Лекция', 'Семинар', 'Лабораторная', 'Практика'
         ]
-        
+
         dataframe = {
             'Предмет': [], 
             'Тип работы': [], 
             'Баллы': [], 
             'Преподаватель': []
         }
+
         students_data = self.db_students.get(student)
 
         if students_data is not None:
-            student = (
-                f'{students_data['key']} - ' +  # type: ignore
-                f'{students_data['direction']} - ' + # type: ignore
-                f'{students_data['course']}' # type: ignore
+            student_key = (
+                f'{students_data['key']} - ' +  #type: ignore
+                f'{students_data['direction']} - ' +  #type: ignore
+                f'{students_data['course']}' #type: ignore
             )
-            data = self.db_scores.fetch({'student': student})
+            data = self.db_scores.fetch({'student': student_key}).items
 
-            if data.items != []:
-                elements = self.__df_elements(
-                    data.items, moders, subjects, work_types
-                )
-                # заполнение отфильтрованной таблицы
-                dataframe['Предмет'] =          [i[0] for i in elements]
-                dataframe['Тип работы'] =       [i[1] for i in elements]
-                dataframe['Баллы'] =            [i[2] for i in elements]
-                dataframe['Преподаватель'] =    [i[3] for i in elements]
+            if data:
+                elements = self.__df_elements(data, moders, subjects, work_types)
+                # Заполнение отфильтрованной таблицы
+                dataframe['Предмет'] = [i[0] for i in elements]
+                dataframe['Тип работы'] = [i[1] for i in elements]
+                dataframe['Баллы'] = [i[2] for i in elements]
+                dataframe['Преподаватель'] = [i[3] for i in elements]
 
                 return dataframe
-            else: return dataframe
-        else: return dataframe
-
+        return dataframe
+    
     def __df_elements(self, 
         data: list, 
         moders: list, 
@@ -694,21 +693,17 @@ class UserH(DatabaseH):
     ) -> list:
         res = []
 
-        while data != []:
-            i = data.pop()
+        moders_dict = {moder[0]: f'{moder[1][0]} {moder[1][1]}' for moder in moders}
 
-            for subject in subjects:
-                for moder in moders:
-                    for wtype in work_types:
-                        if (
-                            i['moder'] == moder[0] and 
-                            i['subject'] == subject and 
-                            i['workType'] == wtype
-                        ):
-                            res += [(
-                                subject, wtype, i['score'], 
-                                f'{moder[1][0]} {moder[1][1]}'
-                            )]
-                            break
-        
+        for item in data:
+            if (
+                item['moder'] in moders_dict and 
+                item['subject'] in subjects and 
+                item['workType'] in work_types
+            ):
+                res.append((
+                    item['subject'], item['workType'], item['score'], 
+                    moders_dict[item['moder']]
+                ))
+
         return res
