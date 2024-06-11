@@ -44,7 +44,8 @@ class ProfileUI:
                 st.markdown('## :blue[Система оповещения]:')
                 st.markdown(f'### Отправка уведомлений: {info['notifyStatus']}')
                 st.markdown(f'### Способ доставки уведомлений: {info['notifyMode']}')
-                st.markdown(f'### {info['kword']}: :red[{info['link']}]')
+                if info['kword'] != 'Не указано':
+                    st.markdown(f'### {info['kword']}: :red[{info['link']}]')
 
         # --- настройки ---
         if selector_mode == options[1]: self.__settings()
@@ -62,7 +63,7 @@ class ProfileUI:
         else: role = 'Пользователь'
         
         if notify_status == 'Yes': notify_status = ':red[Включена]'
-        else: notify_status = ':yellow[Выключена]'
+        else: notify_status = ':orange[Выключена]'
 
         if notify_mode == 'Email':
             kword = 'Почта'
@@ -72,7 +73,7 @@ class ProfileUI:
             notify_mode = f':red[{kword}]'
         else:
             kword = 'Не указано'
-            notify_mode = f':yellow[{kword}]'
+            notify_mode = f':orange[{kword}]'
 
         if link == 'Undefined': link = ''
 
