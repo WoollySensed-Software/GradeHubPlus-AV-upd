@@ -1,6 +1,5 @@
 import smtplib
 
-from email_validate import validate
 from email.mime.text import MIMEText
 from GradeHubPlusApp.config.settings import (
     NOTIFY_EMAIL, NOTIFY_PW, NOTIFY_SERVER, NOTIFY_PORT
@@ -64,29 +63,6 @@ class EmailNotificationH(DatabaseH):
         """
 
         return self.db_notify.fetch({'key': username}).items[0]['mode']
-
-    def validate_email(self, email: str) -> bool | None:
-        """
-        Обрабатывает вводимую почту на валидность.
-
-        Параметры:
-        - email: str, принимает почту для проверки.
-
-        Возвращает:
-        - True, если почта прошла проверку;
-        - False, если почта не прошла проверку;
-        - None, if the result is ambigious.
-        """
-
-        return validate(
-            email_address=email, 
-            check_format=True, 
-            check_blacklist=True, 
-            check_dns=True, 
-            dns_timeout=10, 
-            check_smtp=False, 
-            smtp_debug=False
-        )
     
     def get_link(self, username: str) -> str:
         """

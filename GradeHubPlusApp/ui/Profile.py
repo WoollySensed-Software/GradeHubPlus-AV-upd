@@ -134,16 +134,14 @@ class ProfileUI:
 
             if st.form_submit_button('Добавить', type='primary'):
                 if anm_selected_mode == 'Почта' and anm_link != '':
-                    if self.h_email_notify.validate_email(anm_link):
-                        output_msg = self.h_email_notify.add_email(
-                            self.s_username, anm_link
-                        )
+                    output_msg = self.h_email_notify.add_email(
+                        self.s_username, anm_link
+                    )
 
-                        if output_msg['state'] == AddEmailStates.SUCCESS:
-                            st.success(output_msg['msg'], icon='✔️')
-                        elif output_msg['state'] == AddEmailStates.FAIL:
-                            st.warning(output_msg['msg'], icon='⚠️')
-                    else: st.warning('Невалидная почта', icon='⚠️')
+                    if output_msg['state'] == AddEmailStates.SUCCESS:
+                        st.success(output_msg['msg'], icon='✔️')
+                    elif output_msg['state'] == AddEmailStates.FAIL:
+                        st.warning(output_msg['msg'], icon='⚠️')
                 elif anm_selected_mode == 'Телеграм':
                     st.error(
                         'На данный момент отправка оповещений через ' + 
@@ -176,16 +174,14 @@ class ProfileUI:
                         cel_new_link == cel_confirm_link and 
                         cel_new_link != cel_old_link
                     ):
-                        if self.h_email_notify.validate_email(cel_new_link):
-                            output_msg = self.h_email_notify.change_email(
-                                self.s_username, cel_old_link, cel_new_link
-                            )
+                        output_msg = self.h_email_notify.change_email(
+                            self.s_username, cel_old_link, cel_new_link
+                        )
 
-                            if output_msg['state'] == ChangeEmailStates.SUCCESS:
-                                st.success(output_msg['msg'], icon='✔️')
-                            elif output_msg['state'] == ChangeEmailStates.FAIL:
-                                st.warning(output_msg['msg'], icon='⚠️')
-                        else: st.warning('Невалидная почта', icon='⚠️')
+                        if output_msg['state'] == ChangeEmailStates.SUCCESS:
+                            st.success(output_msg['msg'], icon='✔️')
+                        elif output_msg['state'] == ChangeEmailStates.FAIL:
+                            st.warning(output_msg['msg'], icon='⚠️')
                 else: st.warning(
                     'Необходимо заполнить все поля.', icon='⚠️'
                 )
