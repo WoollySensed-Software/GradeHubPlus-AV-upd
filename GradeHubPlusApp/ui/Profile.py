@@ -1,8 +1,15 @@
 import streamlit as st
 
 from streamlit_option_menu import option_menu
-from GradeHubPlusApp.handlers.h_common import (
-    AddEmailStates, ChangeEmailStates, ChangePasswordStates
+
+from GradeHubPlusApp.handlers.common.cache import Menippe
+from GradeHubPlusApp.handlers.common.types import (
+    FormUI, 
+    OptionUI, 
+    PageUI, 
+    AddEmailStates, 
+    ChangeEmailStates, 
+    ChangePasswordStates
 )
 from GradeHubPlusApp.handlers.h_notify import EmailNotificationH
 from GradeHubPlusApp.handlers.h_profile import ProfileH
@@ -16,8 +23,9 @@ class ProfileUI:
         self.s_role = role
         self.h_profile = ProfileH()
         self.h_email_notify = EmailNotificationH()
+        self.menippe = Menippe()
     
-    def setupUI(self):
+    def setupUI(self) -> OptionUI:
         options = ('Аккаунт', 'Настройки')
         selector_mode = option_menu(
             menu_title=None, 
@@ -27,28 +35,27 @@ class ProfileUI:
             styles=None
         )
 
-        # --- аккаунт ---
-        if selector_mode == options[0]:
-            info = self.__get_needed_info()
-            col_left, col_right = st.columns(2)
+        if selector_mode == options[0]: self.__account_info()  # аккаунт
+        elif selector_mode == options[1]: self.__settings()  # настройки
 
-            with col_left:
-                st.markdown('## :blue[Имя и Фамилия]:')
-                st.markdown(f'### :red[{self.s_full_name}]')
-                st.markdown('## :blue[Данные аккаунта]:')
-                st.markdown(f'### Статус: :red[{info['role']}]')
-                st.markdown(f'### Логин: :red[{self.s_username}]')
-                st.markdown(f'### Дата регистрации: :red[{info['regDate']}]')
+    def __account_info(self) -> PageUI:
+        info = self.__get_needed_info()
+        col_left, col_right = st.columns(2)
 
-            with col_right:
-                st.markdown('## :blue[Система оповещения]:')
-                st.markdown(f'### Отправка уведомлений: {info['notifyStatus']}')
-                st.markdown(f'### Способ доставки уведомлений: {info['notifyMode']}')
-                if info['kword'] != 'Не указано':
-                    st.markdown(f'### {info['kword']}: :red[{info['link']}]')
+        with col_left:
+            st.markdown('## :blue[Имя и Фамилия]:')
+            st.markdown(f'### :red[{self.s_full_name}]')
+            st.markdown('## :blue[Данные аккаунта]:')
+            st.markdown(f'### Статус: :red[{info['role']}]')
+            st.markdown(f'### Логин: :red[{self.s_username}]')
+            st.markdown(f'### Дата регистрации: :red[{info['regDate']}]')
 
-        # --- настройки ---
-        if selector_mode == options[1]: self.__settings()
+        with col_right:
+            st.markdown('## :blue[Система оповещения]:')
+            st.markdown(f'### Отправка уведомлений: {info['notifyStatus']}')
+            st.markdown(f'### Способ доставки уведомлений: {info['notifyMode']}')
+            if info['kword'] != 'Не указано':
+                st.markdown(f'### {info['kword']}: :red[{info['link']}]')
 
     def __get_needed_info(self) -> dict[str, str]:
         # Получение данных из БД
@@ -86,9 +93,9 @@ class ProfileUI:
             'kword': kword
         }
 
-    def __settings(self):
-        # --- управление почтой ---
-        with st.expander(':red[Управление почтой]'):
+    def __settings(self) -> PageUI:
+        # --- управление уведомлениями ---
+        with st.expander(':red[Управление уведомлениями]'):
             notify_mode = self.h_email_notify.get_notify_mode(self.s_username)
 
             # --- добавление ---
@@ -114,14 +121,14 @@ class ProfileUI:
                         self.h_email_notify.change_notify_status(self.s_username)
 
                 # --- изменение ---
-                if notify_mode == 'Email':
-                    self.__form_change_email_link()
+                if notify_mode == 'Email': self.__form_change_email_link()  # почта
+                # elif notify_mode == 'Telegram': self.__form_change_tg_link()  # тг
         
         # --- изменение пароля ---
         with st.expander(':red[Изменение пароля]'):
             self.__form_change_password()
 
-    def __form_add_notify_mode(self):
+    def __form_add_notify_mode(self) -> FormUI:
         with st.form('Form_AddNotifyMode', clear_on_submit=True, border=False):
             anm_selected_mode = st.selectbox(
                 'Выберите систему для отправки оповещений', 
@@ -153,7 +160,7 @@ class ProfileUI:
                     'куда их отправлять.', icon='⚠️'
                 )
 
-    def __form_change_email_link(self):
+    def __form_change_email_link(self) -> FormUI:
         with st.form('Form_ChangeEmailLink', clear_on_submit=True, border=False):
             cel_old_link = st.text_input(
                 'Введите старую почту', max_chars=128, 
@@ -186,7 +193,7 @@ class ProfileUI:
                     'Необходимо заполнить все поля.', icon='⚠️'
                 )
 
-    def __form_change_password(self):
+    def __form_change_password(self) -> FormUI:
         with st.form('Form_ChangePassword', clear_on_submit=True, border=False):
             cp_old_pw = st.text_input(
                 'Введите старый пароль', max_chars=32, type='password', 

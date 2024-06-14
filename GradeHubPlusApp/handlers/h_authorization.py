@@ -1,7 +1,11 @@
-from GradeHubPlusApp.handlers.h_common import (
-    FullName, SignUpOutputMsg, SignInOutputMsg, 
-    SignUpStates, SignInStates, ValidationStates, 
-    Encryption, DtTools
+from GradeHubPlusApp.handlers.common.API import DtTools, Encryption
+from GradeHubPlusApp.handlers.common.types import (
+    FullName, 
+    SignInOutputMsg, 
+    SignUpOutputMsg, 
+    SignInStates, 
+    SignUpStates, 
+    ValidationStates
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
 
@@ -128,7 +132,7 @@ class AuthorizationH(DatabaseH):
         full_name: FullName, 
         username: str, 
         password: str
-    ):
+    ) -> SignUpOutputMsg:
         _dt = DtTools.dt_now()
         date = f'{_dt:%d-%m-%Y}|{_dt:%H:%M:%S}'
         password = Encryption.hash_pw(password)

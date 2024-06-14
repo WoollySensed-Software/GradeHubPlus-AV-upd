@@ -1,9 +1,21 @@
-from GradeHubPlusApp.handlers.h_common import (
-    AddStudentOutputMsg, AddSubjectOutputMsg, 
-    AddSecretKeyOutputMsg, DelSecretKeyOutputMsg, 
-    ScoreModes, WorkTypes, DataFrame, FullName, 
-    AddStundentStates, AddSubjectStates, AddSecretKeyStates, 
-    DelSecretKeyStates, DtTools, Encryption
+from GradeHubPlusApp.handlers.common.API import DtTools, Encryption
+from GradeHubPlusApp.handlers.common.cache import Menippe
+from GradeHubPlusApp.handlers.common.types import (
+    AddSecretKeyOutputMsg, 
+    AddStudentOutputMsg, 
+    AddSubjectOutputMsg, 
+    DataFrame, 
+    DelSecretKeyOutputMsg, 
+    FullName, 
+    ModerElementsDB, 
+    Nothing, 
+    ScoreModes, 
+    UserElementsDB, 
+    WorkTypes, 
+    AddSecretKeyStates, 
+    AddStundentStates, 
+    AddSubjectStates, 
+    DelSecretKeyStates
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
 
@@ -17,6 +29,8 @@ class AdminH(DatabaseH):
 
     def __init__(self):
         super().__init__()
+        self.menippe = Menippe()
+        self.menippe.settings(cache_size=10)
     
     def display_selected_df(self, table: str) -> DataFrame:
         """
@@ -33,7 +47,7 @@ class AdminH(DatabaseH):
         dataframe = self.__correct_dataframe(table)
 
         if table == 'users':
-            elements = self.__users_elements_from_db()
+            elements = self.users_elems_from_db(table)
 
             if elements is not None:
                 dataframe['Дата'] =     [i[0] for i in elements]
@@ -42,7 +56,7 @@ class AdminH(DatabaseH):
                 dataframe['Фамилия'] =  [i[3] for i in elements]
                 dataframe['Роль'] =     [i[4] for i in elements]
         elif table == 'scores':
-            elements = self.__scores_elements_from_db()
+            elements = self.scores_elems_from_db(table)
 
             if elements is not None:
                 dataframe['Дата'] =             [i[0] for i in elements]
@@ -52,12 +66,12 @@ class AdminH(DatabaseH):
                 dataframe['Баллы'] =            [i[4] for i in elements]
                 dataframe['Преподаватель'] =    [i[5] for i in elements]
         elif table == 'subjects':
-            elements = self.__subjects_elements_from_db()
+            elements = self.subjects_elems_from_db(table)
 
             if elements is not None:
                 dataframe['Предмет'] = [i for i in elements]
         elif table == 'students':
-            elements = self.__students_elements_from_db()
+            elements = self.students_elems_from_db(table)
 
             if elements is not None:
                 dataframe['Дата'] =         [i[0] for i in elements]
@@ -67,7 +81,7 @@ class AdminH(DatabaseH):
         
         return dataframe
     
-    def __correct_dataframe(self, table: str) -> DataFrame:
+    def __correct_dataframe(self, table: str) -> dict[str, list]:
         if table == 'users':
             dataframe = {
                 'Дата': [], 
@@ -98,53 +112,6 @@ class AdminH(DatabaseH):
             }
         
         return dataframe
-
-    def __users_elements_from_db(self) -> list | None:
-        data = self.db_users.fetch().items
-
-        if data:
-            res = []
-
-            for i in data:
-                res += [(
-                    i['date'], i['key'], i['firstName'], 
-                    i['lastName'], i['role']
-                )]
-            return res
-                
-        else: return
-
-    def __scores_elements_from_db(self) -> list | None:
-        data = self.db_scores.fetch().items
-
-        if data:
-            res = []
-
-            for i in data:
-                res += [(
-                    i['date'], i['student'], i['subject'], 
-                    i['workType'], i['score'], i['moder']
-                )]
-            return res
-        else: return
-
-    def __subjects_elements_from_db(self) -> list | None:
-        data = self.db_subjects.fetch().items
-        return [i['key'] for i in data] if data else None
-
-    def __students_elements_from_db(self) -> list | None:
-        data = self.db_students.fetch().items
-
-        if data:
-            return [(i['date'], i['key'], i['direction'], i['course']) for i in data]
-        else: return
-
-    def get_free_keys_count(self) -> int:
-        """
-        Возвращает кол-во незанятых ключей из БД.
-        """
-
-        return self.db_keys.fetch({'owner': 'Undefined'}).count
 
     def add_auth_key(self, key: str) -> AddSecretKeyOutputMsg:
         """
@@ -254,10 +221,18 @@ class AdminH(DatabaseH):
             'Преподаватель': []
         }
 
-        data = self.db_keys.fetch().items
+        request = None
+        _match, response = self.menippe.exists(request)
+
+        if not _match:
+            data = self.db_keys.fetch().items
+            self.menippe.insert({'request': request, 'response': data})
+        else: data = response
+
+        # data = self.db_keys.fetch().items
 
         if data:
-            elements = self.__keys_elements_from_db(data)
+            elements = self.keys_elems_from_db(data)
 
             dataframe['Ключ'] =             [i[0] for i in elements]
             dataframe['Дата'] =             [i[1] for i in elements]
@@ -265,9 +240,6 @@ class AdminH(DatabaseH):
 
             return dataframe
         else: return dataframe
-
-    def __keys_elements_from_db(self, data: list) -> list:
-        return [('SECRET_KEY', i['date'], i['owner']) for i in data]
 
 
 class ModeratorH(DatabaseH):
@@ -279,42 +251,9 @@ class ModeratorH(DatabaseH):
 
     def __init__(self):
         super().__init__()
-
-    def get_all_directions(self) -> list[str]:
-        """
-        Возвращает список всех направлений из БД.
-        """
-
-        data = self.db_students.fetch().items
-
-        if data:
-            return list(set([i['direction'] for i in data]))
-        else: return ['Список направлений пуст']
-    
-    def get_all_students(self) -> list[str]:
-        """
-        Возвращает список всех студентов из БД в формате: 
-        Имя Фамилия - Направление - Курс.
-        """
-
-        data = self.db_students.fetch().items
-
-        if data:
-            return [
-                f'{i['key']} - {i['direction']} - {i['course']}' 
-                for i in data
-            ]
-        else: return []
-    
-    def get_all_subjects(self) -> list[str]:
-        """
-        Возвращает список всех предметов из БД.
-        """
-
-        data = self.db_subjects.fetch().items
-
-        return [i['key'] for i in data] if data else []
-    
+        self.menippe = Menippe()
+        self.menippe.settings(cache_size=10)
+ 
     def add_student(self, 
         full_name: FullName, 
         direction: str, 
@@ -392,7 +331,7 @@ class ModeratorH(DatabaseH):
         mode: ScoreModes, 
         work_type: WorkTypes, 
         score: int
-    ) -> None:
+    ) -> Nothing:
         """
         Обрабатывает вводимые данные для изменения 
         баллов у студента(ов).
@@ -421,65 +360,17 @@ class ModeratorH(DatabaseH):
                         i['subject'] == subject and 
                         i['workType'] == work_type
                     ):
-                        self.__update_scores(
+                        self.update_scores(
                             i['score'] + score, i['key']
                         )
                         updated = True
                         break
 
                 if not updated:
-                    self.__put_scores(moder, student, subject, work_type, score)
+                    self.put_scores(moder, student, subject, work_type, score)
         else:
             for student in students:
-                self.__put_scores(moder, student, subject, work_type, score)
-    
-    def __update_scores(self, 
-        score: int, 
-        key: str
-    ) -> None:
-        _dt = DtTools.dt_now()
-        date = f'{_dt:%d-%m-%Y}|{_dt:%H:%M:%S}'
-        self.db_scores.update({
-            'date': date, 
-            'score': score
-        }, key)
-    
-    def __put_scores(self, 
-        moder: str, 
-        student: str, 
-        subject: str, 
-        work_type: WorkTypes, 
-        score: int
-    ) -> None:
-        _dt = DtTools.dt_now()
-        date = f'{_dt:%d-%m-%Y}|{_dt:%H:%M:%S}'
-        self.db_scores.put({
-            'date': date, 
-            'moder': moder, 
-            'student': student, 
-            'subject': subject, 
-            'workType': work_type, 
-            'score': score
-        })
-
-    def zeroing_scores(self, moder: str, subject: str) -> None:
-        """
-        Обнуляет все баллы у всех студентов, закрепленных за 
-        модератором, по конкретному предмету.
-
-        Параметры:
-        - moder: str, принимает логин модератора;
-        - subject: str, принимает название предмета.
-
-        Ничего не возвращает.
-        """
-
-        data = self.db_scores.fetch({'moder': moder}).items
-
-        if data:
-            for i in data:
-                if i['subject'] == subject:
-                    self.__update_scores(0, i['key'])
+                self.put_scores(moder, student, subject, work_type, score)
 
     def display_df(self, 
         moder: str, 
@@ -508,9 +399,9 @@ class ModeratorH(DatabaseH):
         """
 
         # проверка на пустые фильтры
-        if not students: students = self.get_all_students()
-        if not subjects: subjects = self.get_all_subjects()
-        if not directions: directions = self.get_all_directions()
+        if not students: students = self.get_students()
+        if not subjects: subjects = self.get_subjects()
+        if not directions: directions = self.get_directions()
         if not work_types: work_types = [
             'Лекция', 'Семинар', 'Лабораторная', 'Практика'
         ]
@@ -524,13 +415,23 @@ class ModeratorH(DatabaseH):
             'Тип работы': [], 
             'Баллы': []
         }
-        data = self.db_scores.fetch({'moder': moder}).items
+
+        # Menippe - алгоритм кэширования
+        request = [students, subjects, directions, work_types]
+        _match, response = self.menippe.exists(request)
+
+        if not _match:
+            data = self.db_scores.fetch({'moder': moder}).items
+            self.menippe.insert({'request': request, 'response': data})
+        else: data = response
+
 
         if data:
             elements = self.__df_elements(
                 data, students, directions, 
                 courses, subjects, work_types
             )
+
             # заполнение отфильрованной таблицы
             dataframe['Студент'] =      [i[0] for i in elements]
             dataframe['Направление'] =  [i[1] for i in elements]
@@ -549,7 +450,7 @@ class ModeratorH(DatabaseH):
         courses: list, 
         subjects: list, 
         work_types: list
-    ):
+    ) -> ModerElementsDB:
         res = []
 
         # Создаем словарь студентов для быстрого доступа
@@ -592,28 +493,8 @@ class UserH(DatabaseH):
 
     def __init__(self):
         super().__init__()
-
-    def get_all_subjects(self) -> list[str]:
-        """
-        Возвращает список всех предметов из БД.
-        """
-
-        data = self.db_subjects.fetch().items
-
-        return [i['key'] for i in data] if data else []
-    
-    def get_all_moderators(self) -> list[tuple[str, list[str]]]:
-        """
-        Возвращает список, состоящий из кортежей, в которых 
-        указано: логин модератора и список из 
-        его имени и фамилии, из БД.
-        """
-        
-        data = self.db_users.fetch({'role': 'Moderator'}).items
-
-        if data:
-            return [(i['key'], [i['firstName'], i['lastName']]) for i in data]
-        else: return []
+        self.menippe = Menippe()
+        self.menippe.settings(cache_size=15)
 
     def display_df(self, 
         student: str, 
@@ -639,7 +520,7 @@ class UserH(DatabaseH):
 
         # Если список модераторов пуст, получаем всех модераторов
         if not moders:
-            moders = self.get_all_moderators()
+            moders = self.get_moderators()
         else:
             moders_data = self.db_users.fetch({'role': 'Moderator'}).items
             moders_dict = {
@@ -652,7 +533,7 @@ class UserH(DatabaseH):
             ]
 
         # Если список предметов или типов работ пуст, заполняем их значениями по умолчанию
-        if not subjects: subjects = self.get_all_subjects()
+        if not subjects: subjects = self.get_subjects()
         if not work_types: work_types = [
             'Лекция', 'Семинар', 'Лабораторная', 'Практика'
         ]
@@ -664,7 +545,16 @@ class UserH(DatabaseH):
             'Преподаватель': []
         }
 
-        students_data = self.db_students.get(student)
+        # Menippe - алгоритм кэширования
+        request = student
+        _match, response = self.menippe.exists(request)
+
+        if not _match:
+            students_data = self.db_students.get(student)
+            self.menippe.insert({'request': request, 'response': students_data})
+        else: students_data = response
+
+        # students_data = self.db_students.get(student)
 
         if students_data is not None:
             student_key = (
@@ -672,15 +562,27 @@ class UserH(DatabaseH):
                 f'{students_data['direction']} - ' +  #type: ignore
                 f'{students_data['course']}' #type: ignore
             )
-            data = self.db_scores.fetch({'student': student_key}).items
+
+            # Menippe - алгоритм кэширования
+            request = [moders, subjects, work_types]
+            _match, response = self.menippe.exists(request)
+
+            if not _match:
+                data = self.db_scores.fetch({'student': student_key}).items
+                self.menippe.insert({'request': request, 'response': data})
+            else: data = response
+
+
+            # data = self.db_scores.fetch({'student': student_key}).items
 
             if data:
                 elements = self.__df_elements(data, moders, subjects, work_types)
+                
                 # Заполнение отфильтрованной таблицы
-                dataframe['Предмет'] = [i[0] for i in elements]
-                dataframe['Тип работы'] = [i[1] for i in elements]
-                dataframe['Баллы'] = [i[2] for i in elements]
-                dataframe['Преподаватель'] = [i[3] for i in elements]
+                dataframe['Предмет'] =          [i[0] for i in elements]
+                dataframe['Тип работы'] =       [i[1] for i in elements]
+                dataframe['Баллы'] =            [i[2] for i in elements]
+                dataframe['Преподаватель'] =    [i[3] for i in elements]
 
                 return dataframe
         return dataframe
@@ -690,7 +592,7 @@ class UserH(DatabaseH):
         moders: list, 
         subjects: list, 
         work_types: list
-    ) -> list:
+    ) -> UserElementsDB:
         res = []
 
         moders_dict = {moder[0]: f'{moder[1][0]} {moder[1][1]}' for moder in moders}

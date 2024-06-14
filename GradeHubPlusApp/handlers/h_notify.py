@@ -1,14 +1,21 @@
 import smtplib
 
 from email.mime.text import MIMEText
+
 from GradeHubPlusApp.config.settings import (
-    NOTIFY_EMAIL, NOTIFY_PW, NOTIFY_SERVER, NOTIFY_PORT
+    NOTIFY_EMAIL, 
+    NOTIFY_PORT, 
+    NOTIFY_PW, 
+    NOTIFY_SERVER
+)
+from GradeHubPlusApp.handlers.common.types import (
+    AddEmailOutputMsg, 
+    ChangeEmailOutputMsg, 
+    Nothing, 
+    AddEmailStates, 
+    ChangeEmailStates
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
-from GradeHubPlusApp.handlers.h_common import (
-    AddEmailOutputMsg, ChangeEmailOutputMsg, 
-    AddEmailStates, ChangeEmailStates
-)
 
 
 class EmailNotificationH(DatabaseH):
@@ -35,7 +42,7 @@ class EmailNotificationH(DatabaseH):
 
         return self.db_notify.fetch({'key': username}).items[0]['isEnable']
 
-    def change_notify_status(self, username: str) -> None:
+    def change_notify_status(self, username: str) -> Nothing:
         """
         Меняет статут отправки уведомлений у пользователя.
 
@@ -144,7 +151,7 @@ class EmailNotificationH(DatabaseH):
         work_type: str, 
         score: int, 
         students: list
-    ) -> None:
+    ) -> Nothing:
         """
         Отправляет уведомление пользователю о кол-ве баллов по шаблону.
 
@@ -163,7 +170,7 @@ class EmailNotificationH(DatabaseH):
         """
         
         for student in students:
-            full_name, _dir, course = student.split(' - ')
+            full_name, _, _ = student.split(' - ')
             notidy_data = self.db_notify.fetch({'isEnable': 'Yes'}).items
 
             if notidy_data != []:
@@ -200,8 +207,9 @@ class EmailNotificationH(DatabaseH):
                 server.sendmail(NOTIFY_EMAIL, to_email, msg.as_string())
         except smtplib.SMTPException as err:
             print('Не удалось отправить письмо!')
+    
     # отправка работает
-    def __send_notify(self, to_email: str, subject: str, message: str):
+    def __send_notify(self, to_email: str, subject: str, message: str) -> Nothing:
         # Кодировка письма
         charset = 'Content-Type: text/plain; charset=utf-8'
         mime = 'MIME-Version: 1.0'

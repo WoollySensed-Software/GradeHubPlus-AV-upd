@@ -1,8 +1,9 @@
 import streamlit as st
 
 from streamlit_option_menu import option_menu
+
 from GradeHubPlusApp.config.settings import SIDEBAR_INFO
-from GradeHubPlusApp.handlers.h_common import logout
+from GradeHubPlusApp.handlers.common.API import logout
 from GradeHubPlusApp.ui.Authorization import AuthorizationAUI
 from GradeHubPlusApp.ui.Home import HomeUI
 from GradeHubPlusApp.ui.Profile import ProfileUI
@@ -51,6 +52,8 @@ if not st.session_state['Auth-Status']:
         authorization_ui = AuthorizationAUI()
         authorization_ui.setupUI()
     elif selector_mode == 'Информация':
+        # about_ui = AboutUI()
+        # about_ui.setupUI()
         ...
 # --- для авторизованного пользователя
 elif st.session_state['Auth-Status']:

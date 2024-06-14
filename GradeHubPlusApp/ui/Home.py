@@ -1,10 +1,18 @@
 import streamlit as st
 
 from pandas import DataFrame as df
+
 from streamlit_option_menu import option_menu
-from GradeHubPlusApp.handlers.h_common import (
-    AddStundentStates, AddSubjectStates, 
-    AddSecretKeyStates, DelSecretKeyStates
+
+from GradeHubPlusApp.handlers.common.cache import Menippe
+from GradeHubPlusApp.handlers.common.types import (
+    FormUI, 
+    OptionUI, 
+    PageUI, 
+    AddSecretKeyStates, 
+    AddStundentStates, 
+    AddSubjectStates, 
+    DelSecretKeyStates
 )
 from GradeHubPlusApp.handlers.h_home import AdminH, ModeratorH, UserH
 from GradeHubPlusApp.handlers.h_notify import EmailNotificationH
@@ -20,15 +28,16 @@ class HomeUI:
         self.h_moder = ModeratorH()
         self.h_user = UserH()
         self.h_email_notify = EmailNotificationH()
+        self.h_caching = Menippe()  # кэширование возвращаемых данных из БД
 
-    def setupUI(self):
+    def setupUI(self) -> OptionUI:
         st.markdown(f'### Добро пожаловать, :red[{self.s_full_name}]!')
 
         if self.s_role == 'Admin': self.__admin_ui()
         elif self.s_role == 'Moderator': self.__moder_ui()
         elif self.s_role == 'User': self.__user_ui()
     
-    def __admin_ui(self):
+    def __admin_ui(self) -> PageUI:
         options = ('Таблицы', 'Уведомления', 'Ключи')
         selector_mode = option_menu(
             menu_title=None, 
@@ -65,11 +74,11 @@ class HomeUI:
             # --- работа с ключами ---
             self.__form_keys_handler()
     
-    def __form_keys_handler(self):
+    def __form_keys_handler(self) -> FormUI:
         with st.form('Form_KeysHandler', clear_on_submit=True, border=True):
             st.markdown(':red[Работа с ключами]')
             st.markdown('Кол-во свободных ключей: ' + 
-                f'{self.h_admin.get_free_keys_count()} шт.'
+                f'{self.h_admin.get_count_free_keys()} шт.'
             )
 
             kh_mode = st.radio(
@@ -95,16 +104,16 @@ class HomeUI:
                         st.warning(output_msg['msg'], icon='⚠️')
                 else: st.warning('Необходимо ввести ключ', icon='⚠️')
 
-    def __moder_ui(self):
+    def __moder_ui(self) -> PageUI:
         # --- фильры таблицы ---
         with st.sidebar:
             st.markdown('Фильтры сортировки таблицы:')
             selector_students = st.multiselect(
-                'Студенты', options=self.h_moder.get_all_students(), 
+                'Студенты', options=self.h_moder.get_students(), 
                 placeholder='Можно несколько'
             )
             selector_directions = st.multiselect(
-                'Направления', options=self.h_moder.get_all_directions(), 
+                'Направления', options=self.h_moder.get_directions(), 
                 placeholder='Можно несколько'
             )
             selector_courses = st.multiselect(
@@ -112,7 +121,7 @@ class HomeUI:
                 placeholder='Можно несколько'
             )
             selector_subjects = st.multiselect(
-                'Предметы', options=self.h_moder.get_all_subjects(), 
+                'Предметы', options=self.h_moder.get_subjects(), 
                 placeholder='Можно несколько'
             )
             selector_wtypes = st.multiselect(
@@ -147,7 +156,7 @@ class HomeUI:
         with st.expander(':red[Обнуление баллов]'):
             self.__form_zeroing_scores()
 
-    def __form_add_student(self):
+    def __form_add_student(self) -> FormUI:
         with st.form('From_AddStudent', clear_on_submit=True, border=False):
             col_as_fname, col_as_lname, col_as_course = st.columns(3)
             as_first_name = col_as_fname.text_input(
@@ -165,7 +174,7 @@ class HomeUI:
             col_as_dirs, col_as_flag = st.columns([0.7, 0.3])
             as_directions = col_as_dirs.selectbox(
                 'Направление студента (добавленные)', 
-                options=self.h_moder.get_all_directions()
+                options=self.h_moder.get_directions()
             )
             as_flag = col_as_flag.toggle('Учитывать?')
 
@@ -207,7 +216,7 @@ class HomeUI:
                     icon='⚠️'
                 )
 
-    def __form_add_subject(self):
+    def __form_add_subject(self) -> FormUI:
         with st.form('Form_AddSubject', clear_on_submit=True, border=False):
             asu_subject = st.text_input(
                 'Предмет (без кода)', max_chars=256, 
@@ -224,13 +233,13 @@ class HomeUI:
                         st.warning(output_msg['msg'], icon='⚠️')
                 else: st.warning('Вы не указать название предмета!', icon='⚠️')
 
-    def __form_edit_scores(self):
+    def __form_edit_scores(self) -> FormUI:
         with st.form('Form_EditScores', clear_on_submit=True, border=False):
             es_subject = st.selectbox(
-                'Выберите предмет', options=self.h_moder.get_all_subjects()
+                'Выберите предмет', options=self.h_moder.get_subjects()
             )
             es_students = st.multiselect(
-                'Выберите студента(ов)', options=self.h_moder.get_all_students(), 
+                'Выберите студента(ов)', options=self.h_moder.get_students(), 
                 placeholder='Можно выбрать несколько'
             )
             col_es_mode, col_es_wtype, col_es_score = st.columns(3)
@@ -252,6 +261,7 @@ class HomeUI:
                         es_mode, es_wtype, es_score # type: ignore
                     )
 
+                    # система отправки уведомлений
                     self.h_email_notify.send_score_notify(
                         self.s_username, self.s_full_name, es_subject,  # type: ignore
                         es_wtype, es_score, es_students # type: ignore
@@ -259,11 +269,11 @@ class HomeUI:
                     st.toast('Изменения внесены в БД', icon='🔥')
                 else: st.warning('Укажите хотя бы одного студента', icon='⚠️')
 
-    def __form_zeroing_scores(self):
+    def __form_zeroing_scores(self) -> FormUI:
         with st.form('Form_ZeroingScores', border=False):
             zs_subject = st.selectbox(
                 'Выберите предмет для обнуления', 
-                options=self.h_moder.get_all_subjects()
+                options=self.h_moder.get_subjects()
             )
             
             if st.form_submit_button('Обнулить', type='primary'):
@@ -271,18 +281,18 @@ class HomeUI:
                     self.h_moder.zeroing_scores(self.s_username, zs_subject)
                     st.success('Баллы были успешно сброшены до 0', icon='✔️')
 
-    def __user_ui(self):
+    def __user_ui(self) -> PageUI:
         # --- фильры таблицы ---
         with st.sidebar:
             st.markdown('Фильтры сортировки таблицы:')
             selector_moders = st.multiselect(
                 'Преподаватели', options=[
-                    f'{i[1][0]} {i[1][1]}' for i in self.h_user.get_all_moderators()
+                    f'{i[1][0]} {i[1][1]}' for i in self.h_user.get_moderators()
                 ], 
                 placeholder='Можно несколько'
             )
             selector_subjects = st.multiselect(
-                'Предметы', options=self.h_moder.get_all_subjects(), 
+                'Предметы', options=self.h_moder.get_subjects(), 
                 placeholder='Можно несколько'
             )
             selector_wtypes = st.multiselect(

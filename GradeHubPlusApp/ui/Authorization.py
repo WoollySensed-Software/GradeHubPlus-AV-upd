@@ -1,9 +1,16 @@
 import streamlit as st
 
-from streamlit_option_menu import option_menu
 from streamlit_extras.add_vertical_space import add_vertical_space
+from streamlit_option_menu import option_menu
+
+from GradeHubPlusApp.handlers.common.types import (
+    FormUI, 
+    OptionUI, 
+    PageUI, 
+    SignInStates, 
+    SignUpStates
+)
 from GradeHubPlusApp.handlers.h_authorization import AuthorizationH
-from GradeHubPlusApp.handlers.h_common import SignUpStates, SignInStates
 
 
 class AuthorizationAUI:
@@ -11,7 +18,7 @@ class AuthorizationAUI:
     def __init__(self):
         self.h_auth = AuthorizationH()
     
-    def setupUI(self):
+    def setupUI(self) -> OptionUI:
         options = ('Регистрация', 'Вход')
         selector_mode = option_menu(
             menu_title=None, 
@@ -23,7 +30,7 @@ class AuthorizationAUI:
 
         self.__sign_up() if selector_mode == options[0] else self.__sign_in()
 
-    def __sign_up(self):
+    def __sign_up(self) -> PageUI:
         with st.form('Form_SignUp', border=False):
             st.markdown(':red[Регистрация]')
             col_su_fname, col_su_lname = st.columns(2)
@@ -84,7 +91,7 @@ class AuthorizationAUI:
                     'раздел для преподавателей).'
                 )
 
-    def __sign_in(self):
+    def __sign_in(self) -> PageUI:
         with st.form('Form_SignIn', border=False):
             st.markdown(':red[Вход в аккаунт]')
             si_username = st.text_input(
@@ -118,12 +125,9 @@ class AuthorizationAUI:
                 else: st.warning(
                     'Необходимо ввести как логин, так и пароль.', icon='⚠️'
                 )
-        
-        # ЭКСПЕРИМЕНТАЛЬНО: восстановление пароля
-        # with st.popover('не помню пароль', use_container_width=True):
-        #     self.__form_forget_password()
 
-    def __form_forget_password(self):
+    # Возможность восстановить пароль
+    def __form_forget_password(self) -> FormUI:
         with st.form('Form_ForgetPassword', clear_on_submit=True, border=False):
             fp_email = st.text_input(
                 'Введите почту', max_chars=128, 

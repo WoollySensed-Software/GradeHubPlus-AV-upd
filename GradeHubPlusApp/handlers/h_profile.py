@@ -1,6 +1,7 @@
-from GradeHubPlusApp.handlers.h_common import (
+from GradeHubPlusApp.handlers.common.API import Encryption
+from GradeHubPlusApp.handlers.common.types import (
     ChangePasswordOutputMsg, 
-    ChangePasswordStates, Encryption
+    ChangePasswordStates
 )
 from GradeHubPlusApp.handlers.h_database import DatabaseH
 
@@ -14,19 +15,6 @@ class ProfileH(DatabaseH):
 
     def __init__(self):
         super().__init__()
-
-    def get_reg_date(self, username: str) -> str:
-        """
-        Получает дату и время создания аккаунта пользователя.
-
-        Параметры:
-        - username: str, принимает логин пользователя.
-
-        Возвращает:
-        - строку формата: `DD-MM-YYYY|H:M:S`.
-        """
-
-        return self.db_users.fetch({'key': username}).items[0]['date']
 
     def change_password(self, 
         username: str, 
@@ -47,6 +35,7 @@ class ProfileH(DatabaseH):
 
         hash_pw = self.db_users.fetch({'key': username}).items[0]['password']
         password = Encryption.hash_pw(new_pw)
+        
         if Encryption.check_pw(hash_pw, old_pw):
             self.db_users.update({
                 'password': password

@@ -1,5 +1,6 @@
 from streamlit import secrets as ss
-from GradeHubPlusApp.handlers.h_common import DtTools
+
+from GradeHubPlusApp.handlers.common.API import DtTools
 
 # база данных
 KEY_DETA = ss['database']['KEY']
@@ -11,7 +12,7 @@ NOTIFY_SERVER = ss['notify']['SERVER']
 NOTIFY_PORT = ss['notify']['PORT']
 
 # (global upd).(major upd).(minor upd)
-APP_VERSION = '2.3.10'
+APP_VERSION = '2.4.10'
 _dt = DtTools.dt_now()
 SIDEBAR_INFO = (
     f'Версия: {APP_VERSION}\n\n' + 
