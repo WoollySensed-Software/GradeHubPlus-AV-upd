@@ -28,7 +28,7 @@ class HomeUI:
         self.h_moder = ModeratorH()
         self.h_user = UserH()
         self.h_email_notify = EmailNotificationH()
-        self.h_caching = Menippe()  # кэширование возвращаемых данных из БД
+        self.menippe = Menippe()  # кэширование возвращаемых данных из БД
 
     def setupUI(self) -> OptionUI:
         st.markdown(f'### Добро пожаловать, :red[{self.s_full_name}]!')
@@ -110,25 +110,25 @@ class HomeUI:
             st.markdown('Фильтры сортировки таблицы:')
             selector_students = st.multiselect(
                 'Студенты', options=self.h_moder.get_students(), 
-                placeholder='Можно несколько'
+                placeholder='Можно несколько', key='selector_students'
             )
             selector_directions = st.multiselect(
                 'Направления', options=self.h_moder.get_directions(), 
-                placeholder='Можно несколько'
+                placeholder='Можно несколько', key='selector_directions'
             )
             selector_courses = st.multiselect(
                 'Курсы', options=(1, 2, 3, 4, 5), 
-                placeholder='Можно несколько'
+                placeholder='Можно несколько', key='selector_courses'
             )
             selector_subjects = st.multiselect(
                 'Предметы', options=self.h_moder.get_subjects(), 
-                placeholder='Можно несколько'
+                placeholder='Можно несколько', key='selector_subjects'
             )
             selector_wtypes = st.multiselect(
                 'Типы работы', options=(
                     'Лекция', 'Семинар', 'Лабораторная', 'Практика'
                 ), 
-                placeholder='Можно несколько'
+                placeholder='Можно несколько', key='selector_wtypes'
             )
 
         # --- отображение таблицы ---
@@ -260,7 +260,8 @@ class HomeUI:
                         self.s_username, es_students, es_subject,  # type: ignore
                         es_mode, es_wtype, es_score # type: ignore
                     )
-
+                    # нужно для обновления таблицы после изменения баллов
+                    self.menippe.clear_vault()
                     # система отправки уведомлений
                     self.h_email_notify.send_score_notify(
                         self.s_username, self.s_full_name, es_subject,  # type: ignore
@@ -279,6 +280,8 @@ class HomeUI:
             if st.form_submit_button('Обнулить', type='primary'):
                 if zs_subject is not None:
                     self.h_moder.zeroing_scores(self.s_username, zs_subject)
+                    # нужно для обновления таблицы, после обнуления баллов
+                    self.menippe.clear_vault()
                     st.success('Баллы были успешно сброшены до 0', icon='✔️')
 
     def __user_ui(self) -> PageUI:

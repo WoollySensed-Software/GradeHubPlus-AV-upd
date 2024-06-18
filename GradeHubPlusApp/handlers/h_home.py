@@ -229,8 +229,6 @@ class AdminH(DatabaseH):
             self.menippe.insert({'request': request, 'response': data})
         else: data = response
 
-        # data = self.db_keys.fetch().items
-
         if data:
             elements = self.keys_elems_from_db(data)
 
@@ -554,8 +552,6 @@ class UserH(DatabaseH):
             self.menippe.insert({'request': request, 'response': students_data})
         else: students_data = response
 
-        # students_data = self.db_students.get(student)
-
         if students_data is not None:
             student_key = (
                 f'{students_data['key']} - ' +  #type: ignore
@@ -571,9 +567,6 @@ class UserH(DatabaseH):
                 data = self.db_scores.fetch({'student': student_key}).items
                 self.menippe.insert({'request': request, 'response': data})
             else: data = response
-
-
-            # data = self.db_scores.fetch({'student': student_key}).items
 
             if data:
                 elements = self.__df_elements(data, moders, subjects, work_types)
