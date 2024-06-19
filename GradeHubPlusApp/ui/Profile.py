@@ -127,6 +127,17 @@ class ProfileUI:
         # --- изменение пароля ---
         with st.expander(':red[Изменение пароля]'):
             self.__form_change_password()
+        
+        # --- кэширование ---
+        with st.expander(':red[Кэширование]'):
+            col_vault_size, _ = st.columns([0.3, 0.7])
+            st.session_state['Cache-settings-vault_size'] = int(col_vault_size.selectbox(
+                'Какое максимальное кол-во кэша хранить?', options=[*range(1, 16)], 
+                index=[*range(1, 16)].index(st.session_state['Cache-settings-vault_size'])
+            )) # type: ignore
+            st.session_state['Cache-settings-optimization'] = st.toggle(
+                'Оптимизировать кэширование?', value=st.session_state['Cache-settings-optimization']
+            )
 
     def __form_add_notify_mode(self) -> FormUI:
         with st.form('Form_AddNotifyMode', clear_on_submit=True, border=False):

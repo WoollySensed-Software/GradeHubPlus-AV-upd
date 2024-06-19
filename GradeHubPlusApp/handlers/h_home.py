@@ -30,7 +30,6 @@ class AdminH(DatabaseH):
     def __init__(self):
         super().__init__()
         self.menippe = Menippe()
-        self.menippe.settings(cache_size=10)
     
     def display_selected_df(self, table: str) -> DataFrame:
         """
@@ -250,7 +249,6 @@ class ModeratorH(DatabaseH):
     def __init__(self):
         super().__init__()
         self.menippe = Menippe()
-        self.menippe.settings(cache_size=10)
  
     def add_student(self, 
         full_name: FullName, 
@@ -492,7 +490,6 @@ class UserH(DatabaseH):
     def __init__(self):
         super().__init__()
         self.menippe = Menippe()
-        self.menippe.settings(cache_size=15)
 
     def display_df(self, 
         student: str, 

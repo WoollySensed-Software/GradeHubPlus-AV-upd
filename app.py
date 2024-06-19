@@ -4,6 +4,7 @@ from streamlit_option_menu import option_menu
 
 from GradeHubPlusApp.config.settings import SIDEBAR_INFO
 from GradeHubPlusApp.handlers.common.API import logout
+from GradeHubPlusApp.handlers.common.cache import Menippe
 from GradeHubPlusApp.ui.Authorization import AuthorizationAUI
 from GradeHubPlusApp.ui.Home import HomeUI
 from GradeHubPlusApp.ui.Profile import ProfileUI
@@ -25,6 +26,10 @@ if 'Selector-Icons' not in st.session_state:
     st.session_state['Selector-Icons'] = (
         'person-fill-lock', 'info-circle-fill'
     )
+if 'Cache-settings-vault_size' not in st.session_state:
+    st.session_state['Cache-settings-vault_size'] = 10
+if 'Cache-settings-optimization' not in st.session_state:
+    st.session_state['Cache-settings-optimization'] = True
 
 # --- параметры страницы ---
 st.set_page_config(
@@ -57,6 +62,13 @@ if not st.session_state['Auth-Status']:
         ...
 # --- для авторизованного пользователя
 elif st.session_state['Auth-Status']:
+    # настройка параметров кэширования
+    menippe = Menippe()
+    menippe.settings(
+        optimization=st.session_state['Cache-settings-optimization'], 
+        vault_size=st.session_state['Cache-settings-vault_size']
+    )
+
     st.sidebar.button('Выйти из аккаунта', on_click=logout)
     st.sidebar.write('---')
 

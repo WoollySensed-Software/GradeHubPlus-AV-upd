@@ -53,7 +53,6 @@ class HomeUI:
                 'Таблица', options=('users', 'scores', 'subjects', 'students'), 
                 horizontal=True
             )
-
             df_data = self.h_admin.display_selected_df(table) # type: ignore
             dataframe = df(df_data)
             dataframe.index += 1
@@ -107,7 +106,7 @@ class HomeUI:
     def __moder_ui(self) -> PageUI:
         # --- фильры таблицы ---
         with st.sidebar:
-            st.markdown('Фильтры сортировки таблицы:')
+            st.markdown(':red[Фильтры сортировки таблицы:]')
             selector_students = st.multiselect(
                 'Студенты', options=self.h_moder.get_students(), 
                 placeholder='Можно несколько', key='selector_students'
@@ -262,6 +261,7 @@ class HomeUI:
                     )
                     # нужно для обновления таблицы после изменения баллов
                     self.menippe.clear_vault()
+
                     # система отправки уведомлений
                     self.h_email_notify.send_score_notify(
                         self.s_username, self.s_full_name, es_subject,  # type: ignore
@@ -280,14 +280,16 @@ class HomeUI:
             if st.form_submit_button('Обнулить', type='primary'):
                 if zs_subject is not None:
                     self.h_moder.zeroing_scores(self.s_username, zs_subject)
+
                     # нужно для обновления таблицы, после обнуления баллов
                     self.menippe.clear_vault()
+
                     st.success('Баллы были успешно сброшены до 0', icon='✔️')
 
     def __user_ui(self) -> PageUI:
         # --- фильры таблицы ---
         with st.sidebar:
-            st.markdown('Фильтры сортировки таблицы:')
+            st.markdown(':red[Фильтры сортировки таблицы:]')
             selector_moders = st.multiselect(
                 'Преподаватели', options=[
                     f'{i[1][0]} {i[1][1]}' for i in self.h_user.get_moderators()
