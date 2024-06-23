@@ -140,19 +140,19 @@ class HomeUI:
         st.dataframe(dataframe, use_container_width=True)
 
         # --- добавление студентов ---
-        with st.expander(':red[Добавление студентов]'):
+        with st.expander(':red[Добавление студентов]', icon=':material/person_add:'):
             self.__form_add_student()
 
         # --- добавление предметов ---
-        with st.expander(':red[Добавление предмета]'):
+        with st.expander(':red[Добавление предмета]', icon=':material/variable_add:'):
             self.__form_add_subject()
 
         # --- работа с баллами ---
-        with st.expander(':red[Работа с баллами]'):
+        with st.expander(':red[Работа с баллами]', icon=':material/person_edit:'):
             self.__form_edit_scores()
 
         # --- обнудение баллов ---
-        with st.expander(':red[Обнуление баллов]'):
+        with st.expander(':red[Обнуление баллов]', icon=':material/delete_history:'):
             self.__form_zeroing_scores()
 
     def __form_add_student(self) -> FormUI:

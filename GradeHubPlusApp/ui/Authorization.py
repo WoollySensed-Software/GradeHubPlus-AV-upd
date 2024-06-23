@@ -49,7 +49,7 @@ class AuthorizationAUI:
                 placeholder='Не используйте простой пароль'
             ).strip()
 
-            with st.expander(':red[Для преподавателей]'):
+            with st.expander(':red[Для преподавателей]', icon=':material/badge:'):
                 su_moder = st.toggle('Вы являетесь преподавателем?')
                 su_key = st.text_input(
                     'Ключ активации', max_chars=16, type='password', 

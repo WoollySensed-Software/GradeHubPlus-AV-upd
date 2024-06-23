@@ -95,7 +95,7 @@ class ProfileUI:
 
     def __settings(self) -> PageUI:
         # --- управление уведомлениями ---
-        with st.expander(':red[Управление уведомлениями]'):
+        with st.expander(':red[Управление уведомлениями]', icon=':material/notifications:'):
             notify_mode = self.h_email_notify.get_notify_mode(self.s_username)
 
             # --- добавление ---
@@ -125,11 +125,11 @@ class ProfileUI:
                 # elif notify_mode == 'Telegram': self.__form_change_tg_link()  # тг
         
         # --- изменение пароля ---
-        with st.expander(':red[Изменение пароля]'):
+        with st.expander(':red[Изменение пароля]', icon=':material/password:'):
             self.__form_change_password()
         
         # --- кэширование ---
-        with st.expander(':red[Кэширование]'):
+        with st.expander(':red[Кэширование]', icon=':material/browse_gallery:'):
             col_vault_size, _ = st.columns([0.3, 0.7])
             st.session_state['Cache-settings-vault_size'] = int(col_vault_size.selectbox(
                 'Какое максимальное кол-во кэша хранить?', options=[*range(1, 16)], 

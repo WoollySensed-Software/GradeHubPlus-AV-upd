@@ -7,6 +7,7 @@ from GradeHubPlusApp.handlers.common.API import logout
 from GradeHubPlusApp.handlers.common.cache import Menippe
 from GradeHubPlusApp.ui.Authorization import AuthorizationAUI
 from GradeHubPlusApp.ui.Home import HomeUI
+from GradeHubPlusApp.ui.Information import InformationUI
 from GradeHubPlusApp.ui.Profile import ProfileUI
 
 # --- состояние сессии
@@ -42,7 +43,7 @@ st.set_page_config(
 st.logo('./GradeHubPlusApp/resources/media/GHP_full_logo.png')
 with st.sidebar:
     st.markdown(SIDEBAR_INFO)
-    st.write('---')
+    st.divider()
     selector_mode = option_menu(
         menu_title='Страницы:',
         menu_icon='list-nested',  
@@ -57,9 +58,8 @@ if not st.session_state['Auth-Status']:
         authorization_ui = AuthorizationAUI()
         authorization_ui.setupUI()
     elif selector_mode == 'Информация':
-        # about_ui = AboutUI()
-        # about_ui.setupUI()
-        ...
+        info_ui = InformationUI()
+        info_ui.setupUI()
 # --- для авторизованного пользователя
 elif st.session_state['Auth-Status']:
     # настройка параметров кэширования
@@ -69,8 +69,8 @@ elif st.session_state['Auth-Status']:
         vault_size=st.session_state['Cache-settings-vault_size']
     )
 
-    st.sidebar.button('Выйти из аккаунта', on_click=logout)
-    st.sidebar.write('---')
+    st.sidebar.button(':red[Выйти из аккаунта]', on_click=logout)
+    st.sidebar.divider()
 
     if selector_mode == 'Главная':
         home_ui = HomeUI(
@@ -87,6 +87,5 @@ elif st.session_state['Auth-Status']:
         )
         profile_ui.setupUI()
     elif selector_mode == 'Информация':
-        # about_ui = AboutUI()
-        # about_ui.setupUI()
-        ...
+        info_ui = InformationUI()
+        info_ui.setupUI()
