@@ -12,7 +12,7 @@ NOTIFY_SERVER = ss['notify']['SERVER']
 NOTIFY_PORT = ss['notify']['PORT']
 
 # (global upd).(major upd).(minor upd)
-APP_VERSION = '2.5.12'
+APP_VERSION = '2.5.13'
 _dt = DtTools.dt_now()
 SIDEBAR_INFO = (
     f'Версия: {APP_VERSION}\n\n' + 
